@@ -71,6 +71,10 @@ then
         # get node external IPs
     if [[ ${#slist[@]} == 0 ]] 
         then
+            slist=( $(kubectl get nodes -o json | jq -r '.items[].metadata.labels | select((."node-role.kubernetes.io/infra" == null) and .storage == "pmem") | ."kubernetes.io/hostname" ' ) ) 
+        fi
+    if [[ ${#slist[@]} == 0 ]] 
+        then
             slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalDNS")].address}' ) )
         fi
     if [[ ${#slist[@]} == 0 ]] 
