@@ -63,14 +63,12 @@ if [[ "$serviceType" != "LoadBalancer" ]]
 then
 # get IP/DNS names
     hostname=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="Hostname")].address}') )
-    if [[ ${hostname[0]} == "docker-desktop" ]]
-    then
-        slist=( "localhost" "localhost" "localhost" )
-    else
-        slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
-        # get node external IPs
+    # set the slist from ExternalDNS
+    slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
+    # get node external IPs
     if [[ ${#slist[@]} == 0 ]] 
         then
+            # OpenShift read of names
             slist=( $(kubectl get nodes -o json | jq -r '.items[].metadata.labels | select((."node-role.kubernetes.io/infra" == null) and .storage == "pmem") | ."kubernetes.io/hostname" ' ) ) 
         fi
     if [[ ${#slist[@]} == 0 ]] 
@@ -81,7 +79,6 @@ then
         then
             slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
         fi
-    fi
 fi
 
 

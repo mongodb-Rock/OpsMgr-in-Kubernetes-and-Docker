@@ -4,7 +4,7 @@ d=$( dirname "$0" )
 cd "${d}"
 source init.conf
 
-while getopts 'n:c:m:d:v:xh' opt
+while getopts 'n:c:m:d:v:l:xh' opt
 do
   case "$opt" in
     n) name="$OPTARG" ;;
@@ -12,9 +12,10 @@ do
     m) mem="$OPTARG" ;;
     d) dsk="$OPTARG" ;;
     v) ver="$OPTARG" ;;
+    l) ldap="$OPTARG" ;;
     x) x="1" ;; # cleanup
     ?|h)
-      echo "Usage: $(basename $0) [-n name] [-c cpu] [-m memory] [-d disk] [-c arg] [-v version] [-x]"
+      echo "Usage: $(basename $0) [-n name] [-c cpu] [-m memory] [-d disk] [-c arg] [-l ldap] [-a authorization][-x]"
       exit 1
       ;;
   esac
@@ -26,32 +27,69 @@ cpu="${cpu:-0.5}"
 mem="${mem:-500Mi}"
 dsk="${dsk:-1Gi}"
 ver="${ver:-$mdbVersion}"
+ldap="${ldap:-$ldap}"
 cleanup=${x:-0}
 
 # make manifest from template
-mdbuser="mdbuser_${name}.yaml"
-mdb="mdb_${name}.yaml"
+if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
+then
+  mdbuser="mdbuser_${ldap}_${name}.yaml"
+  mdb="mdb_${ldap}_${name}.yaml"
+else
+  mdbuser="mdbuser_${name}.yaml"
+  mdb="mdb_${name}.yaml"
+fi
 tlsc="#TLS "
 tlsr=$tlsc
 if [[ ${tls} == 1 ]]
 then
 tlsr=""
 fi
-cat mdb_replicaset.yaml | sed \
-    -e "s/$tlsc/$tlsr/" \
-    -e "s/MEM/$mem/" \
-    -e "s/CPU/$cpu/" \
-    -e "s/DISK/$dsk/" \
-    -e "s/VERSION/$ver/" \
-    -e "s/NAMESPACE/$namespace/" \
-    -e "s/NAME/$name/" > "$mdb"
+ldaptls=""
+if [[ ${ldap} == 'ldaps' ]]
+then
+  ldaptls="tls"
+fi
 
+if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
+then
+  cat mdb_replicaset_ldap.yaml | sed \
+      -e "s/$tlsc/$tlsr/" \
+      -e "s/MEM/$mem/" \
+      -e "s/CPU/$cpu/" \
+      -e "s/DISK/$dsk/" \
+      -e "s/VERSION/$ver/" \
+      -e "s/NAMESPACE/$namespace/" \
+      -e "s/LDAPTLS/$ldaptls/" \
+      -e "s/LDAPBINDQUERYUSER/$ldapBindQueryUser/" \
+      -e "s/LDAPAUTHZQUERYTEMPLATE/$ldapAuthzQueryTemplate/" \
+      -e "s/LDAPUSERTODNMAPPING/$ldapUserToDNMapping/" \
+      -e "s/LDAPTIMEOUTMS/$ldapTimeoutMS/" \
+      -e "s/LDAPUSERCACHEINVALIDATIONINTERVAL/$ldapUserCacheInvalidationInterval/" \
+      -e "s/LDAPSERVER/$ldapServer/" \
+      -e "s/NAME/$name/" > "$mdb"
+else
+  cat mdb_replicaset.yaml | sed \
+      -e "s/$tlsc/$tlsr/" \
+      -e "s/MEM/$mem/" \
+      -e "s/CPU/$cpu/" \
+      -e "s/DISK/$dsk/" \
+      -e "s/VERSION/$ver/" \
+      -e "s/NAMESPACE/$namespace/" \
+      -e "s/NAME/$name/" > "$mdb"
+fi
 #dbuserlc=${dbuser,,}
 dbuserlc=$( printf "$dbuser" | tr '[:upper:]' '[:lower:]' )
-cat mdbuser_template.yaml | sed \
-    -e "s/NAME/${name}/" \
-    -e "s/USER/${dbuserlc}/" > "$mdbuser"
-
+if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
+then
+  cat mdbuser_ldap_template.yaml | sed \
+      -e "s/NAME/${name}/" \
+      -e "s/USER/${dbuserlc}/" > "$mdbuser"
+else
+    cat mdbuser_template.yaml | sed \
+      -e "s/NAME/${name}/" \
+      -e "s/USER/${dbuserlc}/" > "$mdbuser"
+fi
 # clean up any previous certs and services
 if [[ ${cleanup} = 1 ]]
 then

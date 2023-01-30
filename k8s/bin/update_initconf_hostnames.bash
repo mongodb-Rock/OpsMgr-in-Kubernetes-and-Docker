@@ -129,13 +129,6 @@ else
 	done
 fi
 
-if [[ ${nodename} == "docker-desktop" ]]
-then
-    nodename=(docker-desktop)
-    dnslist=(docker-desktop)
-    iplist=(127.0.0.1)
-fi
-
 # add 3 nodes to the /etc/hosts file
 names=( mongodb1 mongodb2 mongodb3 )  
 

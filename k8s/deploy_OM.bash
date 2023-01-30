@@ -85,12 +85,9 @@ fi
 mdbom="mdbom_${name}.yaml"
 dbuserlc=$( printf "$dbuser" | tr '[:upper:]' '[:lower:]' )
 context=$( kubectl config current-context )
-if [[ "${context}" == "docker-desktop" ]]
-then
-    replace="#Docker "
-else
-    replace="#Prod   "
-fi
+
+replace="#Prod   "
+
 # make manifest from template
 cat mdbom_template.yaml | sed \
     -e "s/$tlsc/$tlsr/" \

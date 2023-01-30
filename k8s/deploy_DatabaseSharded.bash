@@ -39,13 +39,6 @@ csmem="2Gi"
 cscpu="0.5"
 
 context=$( kubectl config current-context )
-if [[ "${context}" == "docker-desktop" ]]
-then
-    msmem="400Mi"
-    mscpu="0.33"
-    csmem="400Mi"
-    cscpu="0.33"
-fi
 
 # make manifest from template
 mdbuser="mdbuser_${name}.yaml"
