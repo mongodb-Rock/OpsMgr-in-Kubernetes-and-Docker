@@ -32,12 +32,20 @@ spec:
       single:
         storage: DISK # 2Gi
   security:
+    #TLS certsSecretPrefix: mdb # provide custom x509 certificates (keys and certs)
+    #TLS tls:
+    #TLS   ca: ca-pem # provide a custom certificate authority (cert in a pem file)
+    #  enabled: true # false # deprecated in 1.16
+    #  secretRef:
+    #    prefix: mdb # same as certsSecretPrefix (not needed)
+    #    name: mdb-myreplicaset-cert
     authentication:
-      enabled: true
-      # Enabled LDAP Authentication Mode
-      modes: ["LDAP"]
-
-      # LDAP related configuration
+      enabled : true # false
+      modes: ["SCRAM","LDAP"]
+      #internalCluster: "X509"
+      agents:
+        mode: "SCRAM"
+      # Enabled LDAP Authentication Mode # LDAP related configuration
       ldap:
         # Specify the hostname:port combination of one or
         # more LDAP servers
@@ -51,8 +59,8 @@ spec:
         # ConfigMap containing a CA certificate that validates
         # the LDAP server's TLS certificate.
         caConfigMapRef:
-          name: "<configmap-name>"
-          key: "<configmap-entry-key>"
+          name: "kube-root-ca.crt"
+          key: "ca.crt"
 
         # Specify the LDAP Distinguished Name to which
         # MongoDB binds when connecting to the LDAP server
@@ -63,7 +71,7 @@ spec:
         # reference to a Secret Kubernetes Object containing
         # one "password" key.
         bindQueryPasswordSecretRef:
-          name: "<secret-name>"
+          name: "NAME-ldapsecret"
 
         # Select True to validate the LDAP server configuration or False to skip validation.
         validateLDAPServerConfig: false

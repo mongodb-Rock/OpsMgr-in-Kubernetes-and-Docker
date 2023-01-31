@@ -76,14 +76,14 @@ printf "\n%s\n" "_______________________________________________________________
 printf "%s\n" "Generate splitHorizon configuration for External access to a Production DB ..."
 
 # deploy Replicated Database generate  splitHorizon configuration for External access to a Production DB
-if [[ $ldap == 'ldap' || $ldap == 'ldaps' ]]
-then
-    deploy_Database.bash -n "myreplicaset-${ldap}"          -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
-    replicasetName="myreplicaset-${ldap}"
-else
+#if [[ $ldap == 'ldap' || $ldap == 'ldaps' ]]
+#then
+    deploy_Database.bash -n "myldaprs"  -l ldaps      -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
+    replicasetName="myldaprs"
+#else
     deploy_Database.bash -n "myreplicaset"          -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
     replicasetName="myreplicaset"
-fi
+#fi
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Generate configuration for External access to a Sharded Production DB ..."

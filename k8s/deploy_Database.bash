@@ -27,18 +27,19 @@ cpu="${cpu:-0.5}"
 mem="${mem:-500Mi}"
 dsk="${dsk:-1Gi}"
 ver="${ver:-$mdbVersion}"
-ldap="${ldap:-$ldap}"
+#ldap="${ldap}"
 cleanup=${x:-0}
 
 # make manifest from template
 if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
-  mdbuser="mdbuser_${name}_${ldap}.yaml"
+  mdbuser2="mdbuser_${name}_${ldap}.yaml"
   mdb="mdb_${name}_${ldap}.yaml"
-else
-  mdbuser="mdbuser_${name}.yaml"
-  mdb="mdb_${name}.yaml"
 fi
+
+  mdbuser="mdbuser_${name}.yaml"
+  #mdb="mdb_${name}.yaml"
+
 tlsc="#TLS "
 tlsr=$tlsc
 if [[ ${tls} == 1 ]]
@@ -82,14 +83,15 @@ fi
 dbuserlc=$( printf "$dbuser" | tr '[:upper:]' '[:lower:]' )
 if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
+  ldapuserlc=$( printf "$ldapUser" | tr '[:upper:]' '[:lower:]' )
   cat mdbuser_ldap_template.yaml | sed \
       -e "s/NAME/${name}/" \
-      -e "s/USER/${dbuserlc}/" > "$mdbuser"
-else
-    cat mdbuser_template.yaml | sed \
+      -e "s/USER/${ldapuserlc}/" > "$mdbuser2"
+fi
+cat mdbuser_template.yaml | sed \
       -e "s/NAME/${name}/" \
       -e "s/USER/${dbuserlc}/" > "$mdbuser"
-fi
+
 # clean up any previous certs and services
 if [[ ${cleanup} = 1 ]]
 then
@@ -180,6 +182,17 @@ kubectl create secret generic ${name}-${dbuserlc} \
 
 # Create the User Resource
 kubectl apply -f "${mdbuser}"
+
+if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
+then
+kubectl apply -f "${mdbuser2}"
+kubectl delete secret         "${name}-ldapsecret" > /dev/null 2>&1
+kubectl create secret generic "${name}-ldapsecret" \
+    --from-literal=password="${ldapSecret}" 
+
+fi
+
+
 
 # remove any certificate requests
 list=( $( kubectl get csr 2>/dev/null | grep "${name}" | awk '{print $1}' ) )
