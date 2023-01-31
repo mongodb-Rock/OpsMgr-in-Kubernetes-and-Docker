@@ -87,13 +87,13 @@ if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
   ldapuserlc=$( printf "$ldapUser" | tr '[:upper:]' '[:lower:]' )
   cat mdbuser_ldap_template.yaml | sed \
-      -e "s/NAME-USER/${name}-${ldapuserlc//_/}" \
+      -e "s?NAME-USER?${name}-${ldapuserlc//_}?" \
       -e "s/USER/${ldapuserlc}/" > "$mdbuser2"
 fi
 cat mdbuser_template.yaml | sed \
-      -e "s/NAME-USER/${name}-${dbuserlc//_}/" \
+      -e "s?NAME-USER?${name}-${dbuserlc//_}?" \
       -e "s/USER/${dbuserlc}/" > "$mdbuser"
-
+exit
 # clean up any previous certs and services
 if [[ ${cleanup} = 1 ]]
 then
