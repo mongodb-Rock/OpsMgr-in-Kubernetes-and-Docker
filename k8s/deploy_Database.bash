@@ -33,8 +33,8 @@ cleanup=${x:-0}
 # make manifest from template
 if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
-  mdbuser="mdbuser_${ldap}_${name}.yaml"
-  mdb="mdb_${ldap}_${name}.yaml"
+  mdbuser="mdbuser_${name}_${ldap}.yaml"
+  mdb="mdb_${name}_${ldap}.yaml"
 else
   mdbuser="mdbuser_${name}.yaml"
   mdb="mdb_${name}.yaml"
