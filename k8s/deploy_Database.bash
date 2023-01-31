@@ -50,6 +50,8 @@ ldaptls=""
 if [[ ${ldap} == 'ldaps' ]]
 then
   ldaptls="tls"
+else
+  ldaptls="none"
 fi
 
 if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
@@ -85,11 +87,11 @@ if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
   ldapuserlc=$( printf "$ldapUser" | tr '[:upper:]' '[:lower:]' )
   cat mdbuser_ldap_template.yaml | sed \
-      -e "s/NAME/${name}/" \
+      -e "s/NAME-USER/${name}-${ldapuserlc//_/}" \
       -e "s/USER/${ldapuserlc}/" > "$mdbuser2"
 fi
 cat mdbuser_template.yaml | sed \
-      -e "s/NAME/${name}/" \
+      -e "s/NAME-USER/${name}-${dbuserlc//_}/" \
       -e "s/USER/${dbuserlc}/" > "$mdbuser"
 
 # clean up any previous certs and services
