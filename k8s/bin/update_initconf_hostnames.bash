@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/k8s/init.conf
+source init.conf
 TAB=$'\t'
 
 #if [[ ${1} == "" ]]
