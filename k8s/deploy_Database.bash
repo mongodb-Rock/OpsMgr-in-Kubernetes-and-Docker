@@ -53,33 +53,34 @@ then
 else
   ldaptls="none"
 fi
-
+# sed escape /
+d=$'\03'
 if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
   cat mdb_replicaset_ldap.yaml | sed \
-      -e "s/$tlsc/$tlsr/" \
-      -e "s/MEM/$mem/" \
-      -e "s/CPU/$cpu/" \
-      -e "s/DISK/$dsk/" \
-      -e "s/VERSION/$ver/" \
-      -e "s/NAMESPACE/$namespace/" \
-      -e "s/LDAPTLS/$ldaptls/" \
-      -e "s/LDAPBINDQUERYUSER/$ldapBindQueryUser/" \
-      -e "s/LDAPAUTHZQUERYTEMPLATE/$ldapAuthzQueryTemplate/" \
-      -e "s/LDAPUSERTODNMAPPING/$ldapUserToDNMapping/" \
-      -e "s/LDAPTIMEOUTMS/$ldapTimeoutMS/" \
-      -e "s/LDAPUSERCACHEINVALIDATIONINTERVAL/$ldapUserCacheInvalidationInterval/" \
-      -e "s/LDAPSERVER/$ldapServer/" \
-      -e "s/NAME/$name/" > "$mdb"
+      -e "s${d}$tlsc${d}$tlsr${d}" \
+      -e "s${d}MEM${d}$mem${d}" \
+      -e "s${d}CPU${d}$cpu${d}" \
+      -e "s${d}DISK${d}$dsk${d}" \
+      -e "s${d}VERSION${d}$ver${d}" \
+      -e "s${d}NAMESPACE${d}$namespace${d}" \
+      -e "s${d}LDAPTLS${d}$ldaptls${d}" \
+      -e "s${d}LDAPBINDQUERYUSER${d}$ldapBindQueryUser${d}" \
+      -e "s${d}LDAPAUTHZQUERYTEMPLATE${d}$ldapAuthzQueryTemplate${d}" \
+      -e "s${d}LDAPUSERTODNMAPPING${d}$ldapUserToDNMapping${d}" \
+      -e "s${d}LDAPTIMEOUTMS${d}$ldapTimeoutMS${d}" \
+      -e "s${d}LDAPUSERCACHEINVALIDATIONINTERVAL${d}$ldapUserCacheInvalidationInterval${d}" \
+      -e "s${d}LDAPSERVER${d}$ldapServer${d}" \
+      -e "s${d}NAME${d}$name${d}" > "$mdb"
 else
   cat mdb_replicaset.yaml | sed \
-      -e "s/$tlsc/$tlsr/" \
-      -e "s/MEM/$mem/" \
-      -e "s/CPU/$cpu/" \
-      -e "s/DISK/$dsk/" \
-      -e "s/VERSION/$ver/" \
-      -e "s/NAMESPACE/$namespace/" \
-      -e "s/NAME/$name/" > "$mdb"
+      -e "s${d}$tlsc${d}$tlsr${d}" \
+      -e "s${d}MEM${d}$mem${d}" \
+      -e "s${d}CPU${d}$cpu${d}" \
+      -e "s${d}DISK${d}$dsk${d}" \
+      -e "s${d}VERSION${d}$ver${d}" \
+      -e "s${d}NAMESPACE${d}$namespace${d}" \
+      -e "s${d}NAME${d}$name${d}" > "$mdb"
 fi
 #dbuserlc=${dbuser,,}
 dbuserlc=$( printf "$dbuser" | tr '[:upper:]' '[:lower:]' )
@@ -87,13 +88,13 @@ if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
   ldapuserlc=$( printf "$ldapUser" | tr '[:upper:]' '[:lower:]' )
   cat mdbuser_ldap_template.yaml | sed \
-      -e "s?NAME-USER?${name}-${ldapuserlc//_}?" \
-      -e "s/USER/${ldapuserlc}/" > "$mdbuser2"
+      -e "s${d}NAME-USER${d}${name}-${ldapuserlc//_}${d}" \
+      -e "s${d}USER${d}${ldapuserlc}${d}" > "$mdbuser2"
 fi
 cat mdbuser_template.yaml | sed \
-      -e "s?NAME-USER?${name}-${dbuserlc//_}?" \
-      -e "s/USER/${dbuserlc}/" > "$mdbuser"
-exit
+      -e "s${d}NAME-USER${d}${name}-${dbuserlc//_}${d}" \
+      -e "s${d}USER${d}${dbuserlc}${d}" > "$mdbuser"
+
 # clean up any previous certs and services
 if [[ ${cleanup} = 1 ]]
 then
