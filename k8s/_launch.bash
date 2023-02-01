@@ -60,30 +60,25 @@ deploy_OM.bash -n "opsmanager" $skip -c 0.5 -m 1Gi -d 4Gi -v "$omVersion"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup Oplog1 DB for OM ..."
-
 # deploy Ops Manager Backup Oplog
 deploy_Database.bash -n "opsmanager-oplog"      -c "0.50" -m "2Gi"          -v "$appdbVersion"
 
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup BlockStore1 DB for OM ..."
-
 # deploy Ops Manager Backup BlockStore
 deploy_Database.bash -n "opsmanager-blockstore" -c "0.50" -m "2Gi"          -v "$appdbVersion"
 
+printf "\n%s\n" "__________________________________________________________________________________________"
+printf "%s\n" "Generate splitHorizon configuration for External access to a Production DB ..."
+deploy_Database.bash -n "myreplicaset"          -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
+replicasetName="myreplicaset"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Generate splitHorizon configuration for External access to a Production DB ..."
-
 # deploy Replicated Database generate  splitHorizon configuration for External access to a Production DB
-#if [[ $ldap == 'ldap' || $ldap == 'ldaps' ]]
-#then
-    deploy_Database.bash -n "myldaprs"  -l ldaps      -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
-    replicasetName="myldaprs"
-#else
-    deploy_Database.bash -n "myreplicaset"          -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
-    replicasetName="myreplicaset"
-#fi
+deploy_Database.bash -n "myldaprs"  -l ${ldapType}      -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
+replicasetName="myldaprs"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Generate configuration for External access to a Sharded Production DB ..."

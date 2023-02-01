@@ -17,3 +17,4 @@ spec:
       name: "readWriteAnyDatabase"
     - db: "admin"
       name: "dbAdminAnyDatabase"
+
