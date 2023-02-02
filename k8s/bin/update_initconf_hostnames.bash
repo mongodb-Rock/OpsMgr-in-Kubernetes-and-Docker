@@ -3,27 +3,30 @@
 source init.conf
 TAB=$'\t'
 
-#if [[ ${1} == "" ]]
-#then 
-#    exit 1 -- need opsmanager service name
-#else
-
 name="${1:-opsmanager}"
 replicasetName="${2}"
 shardingName="${3}"
-#fi
 
 # get the OpsMgr URL and internal IP
 opsMgrUrl=$(        kubectl get om/${name}          -o jsonpath={.status.opsManager.url} )
-eval hostname=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].hostname} ) 
-eval opsMgrExtIp=$( kubectl get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].ip} ) 
 eval port=$(        kubectl get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].port} )
+eval targetPort=$(  kubectl get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].targetPort} )
 eval nodePort=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].nodePort} )
 eval portType=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.spec.type} )
 
+if [[ $serviceType == "NodePort" ]]
+then
+    slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
+    hostname="${slist[0]}"
+    slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
+    opsMgrExtIp=${slist[0]}
+else
+    eval hostname=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].hostname} ) 
+    eval opsMgrExtIp=$( kubectl get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].ip} ) 
+fi
 
 http="http"
-if [[ ${port} == "8443" ]]
+if [[ ${targetPort} == "8443" ]]
 then
     http="https"
 fi
@@ -74,38 +77,6 @@ else
     printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.cluster.local ${name}-svc ${om_ext}" | sudo tee -a /etc/hosts
 fi
 fi
-
-# # get the internal IP (Hack for access to backup proxy)
-# eval hostname=$(          kubectl get svc/${name}-svc-ext -o json | jq .status.loadBalancer.ingress[0].hostname ) 
-# eval queryableBackupIp=$( kubectl get svc/${name}-svc-ext -o json | jq .status.loadBalancer.ingress[0].ip ) 
-
-# if [[ ${hostname} != "null" ]]
-# then
-#     if [[ "${hostname}" != "localhost" && "${hostname}" != "" ]]
-#     then
-#         eval list=( $( nslookup ${hostname} | grep Address ) )
-#         queryableBackupIp=${list[3]}
-#     else
-#         queryableBackupIp=127.0.0.1
-#     fi
-# fi
-
-# if [[ ${queryableBackupIp} != "" ]]
-# then
-# # put the internal name opsmanager-svc for queriable backup /etc/hosts
-# grep "^[0-9].*opsmanager-svc$" /etc/hosts > /dev/null 2>&1
-# if [[ $? == 0 ]]
-# then
-#     # replace host entry
-#     printf "%s" "Replacing /etc/hosts entry: "
-#     printf "%s\n" "${queryableBackupIp}${TAB}opsmanager-svc" 
-#     sudo ${sed} -E -e "s|^[0-9].*(opsmanager-svc$)|${queryableBackupIp}${TAB}\1|" /etc/hosts
-# else
-#     # add host entry
-#     printf "%s" "Adding /etc/hosts entry: "
-#     printf "%s\n" "${queryableBackupIp}${TAB}opsmanager-svc" | sudo tee -a /etc/hosts
-# fi
-# fi
 
 if [[ $replicasetName != "" ]]
 then

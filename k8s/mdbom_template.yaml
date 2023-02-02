@@ -19,11 +19,11 @@ spec:
             - name: mongodb-ops-manager
               resources:  # use 5Gi or more for larger clusters in production
                 limits:
-                  #Prod   cpu: "2.0"
-                  #Prod   memory: 5Gi
+                  cpu: "2.0"
+                  memory: 5Gi
                 requests:
-                  #Prod   cpu: "2.0"
-                  #Prod   memory: 5Gi
+                  cpu: "2.0"
+                  memory: 5Gi
 
   #TLS security: # enables TLS for Ops Manager allowing it to serve traffic over HTTPS
   #TLS   tls:
@@ -33,9 +33,9 @@ spec:
   #TLS       name: "NAME-cert"
 
   externalConnectivity:
-    type: LoadBalancer
-    # type: NodePort # good for mini-kube (or where loadbalancer is not implemented)
-    # port: 32080
+    #LP  type: LoadBalancer
+    #NP  type: NodePort # good for mini-kube (or where loadbalancer is not implemented)
+    #NP  port: 32080
 
   applicationDatabase:
     members: 3
@@ -125,10 +125,10 @@ spec:
           spec:
             containers:
               - name: mongodb-backup-daemon
-                resources: #  use 5Gi for larger clusters in production
+                resources: # use 5Gi for larger clusters in production
                   limits:
-                    #Prod   cpu: "2.0"
-                    #Prod   memory: 5Gi 
+                    cpu: "2.0"
+                    memory: 5Gi 
                   requests:
-                    #Prod   cpu: "2.0"
-                    #Prod   memory: 5Gi
+                    cpu: "2.0"
+                    memory: 5Gi

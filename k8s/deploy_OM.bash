@@ -85,9 +85,14 @@ fi
 mdbom="mdbom_${name}.yaml"
 dbuserlc=$( printf "$dbuser" | tr '[:upper:]' '[:lower:]' )
 context=$( kubectl config current-context )
-
 replace="#Prod   "
-
+if [[ $serviceType == "NodePort" ]]
+then 
+    LP="#LP  "
+else
+    NP="#NP   "
+fi
+# serviceType="LoadBalancer"
 # make manifest from template
 cat mdbom_template.yaml | sed \
     -e "s/$tlsc/$tlsr/" \
@@ -97,6 +102,8 @@ cat mdbom_template.yaml | sed \
     -e "s/CPU/$cpu/" \
     -e "s/DISK/$dsk/" \
     -e "s/DBUSER/$dbuserlc/" \
+    -e "s/#NP  /$NP/" \
+    -e "s/#LP  /$LP/" \
     -e "s/MMSADMINEMAILADDR/$user/" \
     -e "s/MMSEMAIL/$mmsemail/" \
     -e "s/MMSMAILHOSTNAME/$mmsmailhostname/" \
@@ -143,6 +150,6 @@ do
     printf "%s\n" "Sleeping 15 seconds to allow IP/Hostnames to be created"
     sleep 15
 done
-update_initconf_hostnames.bash
+bin/update_initconf_hostnames.bash
 
 exit 0

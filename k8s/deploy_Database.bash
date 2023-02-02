@@ -27,7 +27,6 @@ cpu="${cpu:-0.5}"
 mem="${mem:-500Mi}"
 dsk="${dsk:-1Gi}"
 ver="${ver:-$mdbVersion}"
-#ldap="${ldap}"
 cleanup=${x:-0}
 
 # make manifest from template
@@ -45,25 +44,27 @@ then
 tlsr=""
 fi
 
-ldaptls=""
 if [[ ${ldap} == 'ldaps' ]]
 then
-  ldaptls="tls"
+    LDAPT=""
+    ldaptls="tls"
 else
-  ldaptls="none"
+    LDAPT="#LDAPT "
+    ldaptls="none"
 fi
 
 if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
   cat mdb_replicaset.yaml | sed \
-      -e "s/#LDAP  //" \
-      -e "s/$tlsc/$tlsr/" \
-      -e "s/MEM/$mem/" \
-      -e "s/CPU/$cpu/" \
-      -e "s/DISK/$dsk/" \
-      -e "s/VERSION/$ver/" \
-      -e "s/NAMESPACE/$namespace/" \
-      -e "s/LDAPTLS/$ldaptls/" \
+      -e "s|$tlsc|$tlsr|" \
+      -e "s|MEM|$mem|" \
+      -e "s|CPU|$cpu|" \
+      -e "s|DISK|$dsk|" \
+      -e "s|VERSION|$ver|" \
+      -e "s|NAMESPACE|$namespace|" \
+      -e "s|#LDAP  ||" \
+      -e "s|#LDAPT |$LDAPT|" \
+      -e "s|LDAPTLS|$ldaptls|" \
       -e "s|LDAPBINDQUERYUSER|$ldapBindQueryUser|" \
       -e "s|LDAPAUTHZQUERYTEMPLATE|$ldapAuthzQueryTemplate|" \
       -e "s|LDAPUSERTODNMAPPING|$ldapUserToDNMapping|" \
@@ -73,14 +74,14 @@ then
       -e "s|NAME|$name|" > "$mdb"
 else
   cat mdb_replicaset.yaml | sed \
-      -e "s/#X509  //" \
-      -e "s/$tlsc/$tlsr/" \
-      -e "s/MEM/$mem/" \
-      -e "s/CPU/$cpu/" \
-      -e "s/DISK/$dsk/" \
-      -e "s/VERSION/$ver/" \
-      -e "s/NAMESPACE/$namespace/" \
-      -e "s/NAME/$name/" > "$mdb"
+      -e "s|#X509  ||" \
+      -e "s|$tlsc|$tlsr|" \
+      -e "s|MEM|$mem|" \
+      -e "s|CPU|$cpu|" \
+      -e "s|DISK|$dsk|" \
+      -e "s|VERSION|$ver|" \
+      -e "s|NAMESPACE|$namespace|" \
+      -e "s|NAME|$name|" > "$mdb"
 fi
 
 #dbuserlc=${dbuser,,}
@@ -105,8 +106,10 @@ then
   #kubectl delete secret "${name}-cert" > /dev/null 2>&1
   #kubectl delete csr $( kubectl get csr | grep "${name}" | awk '{print $1}' )
   kubectl delete mdb "${name}"
-  kubectl delete pvc $( kubectl get pvc | grep "${name}" | awk '{print $1}' )
-  kubectl delete svc $( kubectl get svc | grep "${name}" | awk '{print $1}' )
+  kubectl delete pvc $( kubectl get pvc | grep "${name}-" | awk '{print $1}' )
+  kubectl delete svc $( kubectl get svc | grep "${name}-" | awk '{print $1}' )
+  kubectl delete configmaps $( kubectl get configmaps | grep "${name} " | awk '{print $1}' )
+  kubectl delete secrets $( kubectl get secrets | grep "${name}-" | awk '{print $1}' )
 fi
 
 # create new certs if the service does not exist
@@ -192,11 +195,10 @@ kubectl apply -f "${mdbuser}"
 
 if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
 then
-kubectl apply -f "${mdbuser2}"
-kubectl delete secret         "${name}-ldapsecret" > /dev/null 2>&1
-kubectl create secret generic "${name}-ldapsecret" \
+  kubectl apply -f "${mdbuser2}"
+  kubectl delete secret         "${name}-ldapsecret" > /dev/null 2>&1
+  kubectl create secret generic "${name}-ldapsecret" \
     --from-literal=password="${ldapSecret}" 
-
 fi
 
 # remove any certificate requests
