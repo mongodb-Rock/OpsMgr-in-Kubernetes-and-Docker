@@ -5,7 +5,7 @@ TAB=$'\t'
 
 name="${1:-opsmanager}"
 replicasetName="${2}"
-shardingName="${3}"
+shardedName="${3}"
 
 # get the OpsMgr URL and internal IP
 opsMgrUrl=$(        kubectl get om/${name}          -o jsonpath={.status.opsManager.url} )
@@ -16,8 +16,8 @@ eval portType=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.spec.type} )
 
 if [[ $serviceType == "NodePort" ]]
 then
-    slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
-    hostname="${slist[0]}"
+    slist=( $(bin/get_hns.bash -n ${name} ) ) 
+    hostname="${slist[0]%:*}"
     slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
     opsMgrExtIp=${slist[0]}
 else
@@ -87,7 +87,7 @@ then
 	dnslist=(  $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
 	iplist=(   $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
 else
-	list=( $( get_hns.bash ) )
+	list=( $( bin/get_hns.bash -n ${name} ) )
         dnslist=( ${list[*]%:*} ) # strip off port
 	n=0
 	for h in ${dnslist[*]}
@@ -98,6 +98,13 @@ else
         nodename[$n]=""
 	n=$((n+1))
 	done
+fi
+
+if [[ ${nodename} == "docker-desktop" ]]
+then
+    nodename=(docker-desktop)
+    dnslist=(docker-desktop)
+    iplist=(127.0.0.1)
 fi
 
 # add 3 nodes to the /etc/hosts file
@@ -131,12 +138,12 @@ done
 
 fi
 
-if [[ $shardingName != "" ]]
+if [[ $shardedName != "" ]]
 then
-# sharding mongos
+# sharded mongos
 name=( $( kubectl get svc|grep -v "${name}" | grep svc-external ) )
 name=${name[0]%%-svc*}
-list=( $( get_hns.bash -n ${name} ) )
+list=( $( bin/get_hns.bash -n ${name} ) )
 dnslist=( ${list[*]%:*} ) # strip off port
 
 n=0

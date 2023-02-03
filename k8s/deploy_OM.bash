@@ -85,10 +85,15 @@ fi
 mdbom="mdbom_${name}.yaml"
 dbuserlc=$( printf "$dbuser" | tr '[:upper:]' '[:lower:]' )
 context=$( kubectl config current-context )
-replace="#Prod   "
+#if [[ "${context}" == "docker-desktop" ]]
+#then
+#    replace="#Docker "
+#else
+    replace="#Prod   "
+#fi
 if [[ $serviceType == "NodePort" ]]
 then 
-    LP="#LP  "
+    LB="#LB  "
 else
     NP="#NP   "
 fi
@@ -103,7 +108,7 @@ cat mdbom_template.yaml | sed \
     -e "s/DISK/$dsk/" \
     -e "s/DBUSER/$dbuserlc/" \
     -e "s/#NP  /$NP/" \
-    -e "s/#LP  /$LP/" \
+    -e "s/#LB  /$LB/" \
     -e "s/MMSADMINEMAILADDR/$user/" \
     -e "s/MMSEMAIL/$mmsemail/" \
     -e "s/MMSMAILHOSTNAME/$mmsmailhostname/" \
@@ -139,7 +144,8 @@ done
 
 # update init.conf and put internal hostnames in /etc/hosts
 printf "\n%s\n" "Monitoring the progress of svc ${name} ..."
-while true
+n=0
+while [ $n -lt 12 ]
 do
     kubectl get svc | grep ${name} | grep pending
     if [[ $? = 1 ]]
@@ -149,6 +155,7 @@ do
     fi
     printf "%s\n" "Sleeping 15 seconds to allow IP/Hostnames to be created"
     sleep 15
+    n=$((n+1))
 done
 bin/update_initconf_hostnames.bash
 

@@ -38,8 +38,6 @@ mscpu="0.5"
 csmem="2Gi"
 cscpu="0.5"
 
-context=$( kubectl config current-context )
-
 # make manifest from template
 mdbuser="mdbuser_${name}.yaml"
 mdb="mdb_${name}.yaml"

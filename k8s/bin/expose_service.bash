@@ -39,7 +39,8 @@ fi
 #    kubectl apply -f svc_cip_${name}.yaml
 #fi
 
-while true
+n=0
+while [ $n -lt 12 ]
 do
     kubectl get svc ${name}-0 ${name}-1 ${name}-2 |grep pending
     if [[ $? = 1 ]]
@@ -49,6 +50,7 @@ do
     fi
     printf "%s\n" "Sleeping 15 seconds to allow IP/Hostnames to be created"
     sleep 15
+    n=$((n+1))
 done
 
 hn=( $( get_hns.bash -n "${name}" -t "${serviceType}" ) )
