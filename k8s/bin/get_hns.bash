@@ -16,6 +16,8 @@ shift "$(($OPTIND -1))"
 #name=${name:-myreplicaset}
 #serviceType=${serviceType:-NodePort}
 
+if [[ ${serviceType} == "" ]]
+then
 type=$( kubectl get mdb/${name} -o jsonpath='{.spec.type}' 2>/dev/null )
 
 if [[ $? == 1 ]]
@@ -38,6 +40,7 @@ else
     om=0
     sharded=0
     serviceType=$( kubectl get svc/${name}-0 -o jsonpath='{.spec.type}' )
+fi
 fi
 fi
 
