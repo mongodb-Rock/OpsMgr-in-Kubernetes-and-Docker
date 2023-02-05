@@ -87,7 +87,7 @@ dbuserlc=$( printf "$dbuser" | tr '[:upper:]' '[:lower:]' )
 context=$( kubectl config current-context )
 #if [[ "${context}" == "docker-desktop" ]]
 #then
-#    replace="#Docker "
+#    replace="#Demo   "
 #else
     replace="#Prod   "
 #fi

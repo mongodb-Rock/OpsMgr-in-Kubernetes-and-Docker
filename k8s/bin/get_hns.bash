@@ -1,12 +1,11 @@
 #!/bin/bash
 
-while getopts 'n:t:h' opts
+while getopts 'n:h' opts
 do
   case "$opts" in
     n) name="$OPTARG" ;;
-    t) serviceType="$OPTARG" ;;
     ?|h)
-      echo "Usage: $(basename $0) -n clusterName [-t NodePort|LoadBalancer ] "
+      echo "Usage: $(basename $0) -n Name "
       exit 1
       ;;
   esac
@@ -14,45 +13,44 @@ done
 shift "$(($OPTIND -1))"
 
 #name=${name:-myreplicaset}
-#serviceType=${serviceType:-NodePort}
 
-if [[ ${serviceType} == "" ]]
-then
+# Check if this is for a cluster otherwise assume it is the OM
+serviceName=${name}-0
 type=$( kubectl get mdb/${name} -o jsonpath='{.spec.type}' 2>/dev/null )
-
-if [[ $? == 1 ]]
+err1=$?
+if [[ $err1 != 0 ]]
 then
     om=1
-    sharded=0 
-    type=$( kubectl get om/${name} -o jsonpath='{.spec.externalConnectivity.type}' )
-    serviceName=${name}-svc-ext
-    serviceType=$( kubectl get svc/${serviceName} -o jsonpath='{.spec.type}' )
+    serviceType=$( kubectl get om/${name} -o jsonpath='{.spec.externalConnectivity.type}' 2>/dev/null )
+    err2=$?
+    if [[ $err2 == 0 ]] 
+    then
+        serviceName=${name}-svc-ext
+    fi
 else
 
-#if [[ "${sharded}" == "1" ]]
+om=0
 if [[ "${type}" == "ShardedCluster" ]]
 then
-    om=0
-    sharded=1
     serviceName=${name}-svc-external
-    serviceType=$( kubectl get svc/${serviceName} -o jsonpath='{.spec.type}' )
-else
-    om=0
-    sharded=0
-    serviceType=$( kubectl get svc/${name}-0 -o jsonpath='{.spec.type}' )
 fi
 fi
+
+serviceType=$( kubectl get svc/${serviceName} -o jsonpath='{.spec.type}' 2>/dev/null )
+err3=$?
+
+if [[ $err1 != 0 && $err2 != 0 && $err3 != 0 ]]
+then
+        printf "\n%s\n\n", "* * * Error - Service ${serviceName} for $name was not found"
+        exit 1
 fi
 
 if [[ "$serviceType" != "NodePort" ]]
 then
-    if [[ "${sharded}" == 1 ]]
+    if [[ "${type}" == "ShardedCluster" || ${om} == 1 ]]
     then
         np0=$( kubectl get svc/${serviceName} -o jsonpath='{.spec.ports[0].port}' )
         slist=( $( kubectl get svc/${serviceName} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' ) )
-    elif [[ "$om" == 1 ]]
-      then
-        np0=$( kubectl get svc/${serviceName} -o jsonpath='{.spec.ports[0].port}' )
         if [[ ${#slist[@]} == 0 ]]
         then
         slist=( $(kubectl get svc/${serviceName} -o jsonpath='{.status.loadBalancer.ingress[*].ip }' ) )
@@ -69,7 +67,7 @@ then
         fi
     fi
 else
-    if [[ "${sharded}" == 1 || ${om} == 1 ]]
+    if [[ "${type}" == "ShardedCluster" || ${om} == 1 ]]
     then
     np0=$( kubectl get svc/${serviceName} -o jsonpath='{.spec.ports[0].nodePort}' )
     np1=$np0
@@ -86,6 +84,10 @@ then
 # get IP/DNS names
     #slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
     slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="Hostname")].address}') )
+    if [[ ${slist[0]} == "docker-desktop" ]]
+    then
+	slist=( "localhost" ) 
+    else
         slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
     	if [[ ${#slist[@]} == 0 ]] 
         then
@@ -94,8 +96,8 @@ then
     	if [[ ${#slist[@]} == 0 && $custerType == "openshift" ]]
 	then
             # OpenShift read of names
+	    # slist=( $( kubectl get nodes -o json | jq -r '.items[].metadata.labels | select(."node-role.kubernetes.io/worker") | ."kubernetes.io/hostname" '))
             slist=( $(kubectl get nodes -o json | jq -r '.items[].metadata.labels | select((."node-role.kubernetes.io/infra" == null) and .storage == "pmem") | ."kubernetes.io/hostname" ' ) ) 
-	    #slist=( $( kubectl get nodes -o json | jq -r '.items[].metadata.labels | select(."node-role.kubernetes.io/worker") | ."kubernetes.io/hostname" '))
         fi
     	if [[ ${#slist[@]} == 0 ]] 
         then
@@ -105,6 +107,7 @@ then
         then
             slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
         fi
+    fi
     
 fi
 

@@ -71,6 +71,8 @@ then
       -e "s|LDAPTIMEOUTMS|$ldapTimeoutMS|" \
       -e "s|LDAPUSERCACHEINVALIDATIONINTERVAL|$ldapUserCacheInvalidationInterval|" \
       -e "s|LDAPSERVER|$ldapServer|" \
+      -e "s|LDAPCERTMAPNAME|$ldapCertMapName|" \
+      -e "s|LDAPKEY|$ldapKey|" \
       -e "s|NAME|$name|" > "$mdb"
 else
   cat mdb_replicaset.yaml | sed \
@@ -111,6 +113,7 @@ then
   kubectl delete configmaps $( kubectl get configmaps | grep "${name} " | awk '{print $1}' )
   kubectl delete secrets $( kubectl get secrets | grep "${name}-" | awk '{print $1}' )
 fi
+sleep 5
 
 # create new certs if the service does not exist
 # check to see if the svc needs to be created
@@ -118,15 +121,15 @@ for n in ${exposed_dbs[@]}
 do
   if [[ "$n" == "${name}" ]] 
   then
-  # kubectl get svc "${name}-0" > /dev/null 2>&1
-  # if [[ $? != 0 ]]
-  # then
-    # expose ports - creates loadlancer or nodeport service for each pod of member set
-    # add the nodeport map for splitHorizon into the yaml file
-    printf "%s\n" "Generating NodePort/Loadbalancer Service ports..."
-    expose_service.bash "${mdb}" ${cleanup}
-    source init.conf
-  # fi
+    printf "%s\n" "Generating ${serviceType} Service ports..."
+    dnsHorizon=( $( bin/expose_service.bash "${mdb}" ${cleanup} |tail -1 ) )
+    printf "...added these hostnames to the manifest ${mdb}:\n" 
+    printf "\t%s\n" "${dnsHorizon[0]}"
+    printf "\t%s\n" "${dnsHorizon[1]}"
+    printf "\t%s\n" "${dnsHorizon[2]}"
+    printf "\n"
+    eval tail -5 "${mdb}"
+    printf "\n"
   fi
 done
 
@@ -141,10 +144,10 @@ kubectl create configmap "${name}" \
     --from-literal="sslRequireValidMMSServerCertificates='true'"
 
 rm "${PWD}/certs/${name}"* > /dev/null 2>&1
-if [[ -e dnsHorizon ]] 
+if [[ ${#dnsHorizon[@]} != 0  ]] 
 then
-  dnsHorizon=( $(cat dnsHorizon) )
-  rm dnsHorizon
+#  dnsHorizon=( $(cat dnsHorizon) )
+#  rm dnsHorizon
   "${PWD}/certs/make_db_certs.bash" "${name}" ${dnsHorizon[@]}
 else
   "${PWD}/certs/make_db_certs.bash" "${name}"
@@ -198,7 +201,7 @@ then
   kubectl apply -f "${mdbuser2}"
   kubectl delete secret         "${name}-ldapsecret" > /dev/null 2>&1
   kubectl create secret generic "${name}-ldapsecret" \
-    --from-literal=password="${ldapSecret}" 
+    --from-literal=password="${ldapBindQueryPassword}" 
 fi
 
 # remove any certificate requests
@@ -238,9 +241,14 @@ done
 
 sleep 5
 printf "\n"
-bin/get_connection_string.bash -n "${name}"
-printf "\n"
-printf "%s\n" "Wait a minute for the reconfiguration and then connect directly by running: bin/connect_external.bash   -n \"${name}\""
-printf "%s\n" "                                        or connect from the pod by running: bin/kub_connect_to_pod.bash -n \"${name}\""
-
+cs=$( bin/get_connection_string.bash -n "${name}" )
+if [[ "$cs" == *external* ]]
+then
+    printf "\n%s\n\n" "$cs"
+    printf "%s\n" "To see if access is working, connect directly by running: bin/connect_external.bash -n \"${name}\""
+    printf "%s\n" "                      or connect from the pod by running: bin/connect_from_pod.bash -n \"${name}\""
+else
+    printf "\n%s\n\n" "$cs"
+    printf "%s\n" "To see if access is working, connect from the pod by running: bin/connect_from_pod.bash -n \"${name}\""
+fi
 exit 0

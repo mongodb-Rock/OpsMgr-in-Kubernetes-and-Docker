@@ -27,7 +27,7 @@ fi
 version=$( kubectl get mdb ${name} -o jsonpath='{.spec.version}' )
 # use mongo or mongosh (v6)
 mongo=mongo
-if [[ ${version%%.*} = 6 ]]
+if [[ ${version%%.*} > 4 ]]
 then
 mongo=mongosh
 fi

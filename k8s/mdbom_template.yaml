@@ -7,7 +7,7 @@ metadata:
 spec:
   replicas: 1
   version: VERSION # 6.0.6 # 5.0.14 # 4.4.15
-  #Demo jvmParameters: ["-Xms2560m", "-Xmx2560m"] # 2.5M is a good size for demo -- comment out for larger clusters in production
+  #Demo   jvmParameters: ["-Xms2560m", "-Xmx2560m"] # 2.5M is a good size for a demo -- comment out for larger clusters in production
   adminCredentials: admin-user-credentials # Should match metadata.name in the Kubernetes secret for the admin user
   statefulSet:
     spec:
@@ -18,12 +18,16 @@ spec:
         spec:
           containers:
             - name: mongodb-ops-manager
-              resources:  # 3Gi a good size for demo - use 5Gi or more for larger clusters in production
+              resources:  # 3Gi a good size for a demo -- use 5Gi or more for larger clusters in production
                 limits:
-                  #Prod   cpu: "2.0"
-                  #Prod   memory: 5Gi
+                  #Demo   cpu: "0.75"
+                  #Prod   cpu: "3.0"
+                  #Demo   memory: 3Gi
+                  #Prod   memory: 8Gi
                 requests:
+                  #Demo   cpu: "0.75"
                   #Prod   cpu: "2.0"
+                  #Demo   memory: 3Gi
                   #Prod   memory: 5Gi
 
   #TLS security: # enables TLS for Ops Manager allowing it to serve traffic over HTTPS
@@ -36,7 +40,7 @@ spec:
   externalConnectivity:
     #LB  type: LoadBalancer
     #NP  type: NodePort # good for mini-kube (or where loadbalancer is not implemented)
-    #NP  port: 32080
+    #NP  port: 32443
 
   applicationDatabase:
     members: 3
@@ -108,7 +112,7 @@ spec:
     headDB:
       storage: "4Gi" # optional. Default storage is 30G
     members: 1 # Configures the number of backup daemons to create (default 1)
-    #Demo jvmParameters: ["-Xms1024m", "-Xmx1536m"] # 1M is a good size for demo -- comment out for larger clusters in production
+    #Demo   jvmParameters: ["-Xms1024m", "-Xmx1536m"] # 1M is a good size for a demo -- comment out for larger clusters in production
     opLogStores:
       - name: oplog
         mongodbResourceRef:
@@ -127,10 +131,14 @@ spec:
           spec:
             containers:
               - name: mongodb-backup-daemon
-                resources: # ~2Gi is good size for demo -- use 5Gi for larger clusters in production
+                resources: # ~2Gi is good size for a demo -- use 5Gi for larger clusters in production
                   limits:
-                    #Prod   cpu: "2.0"
-                    #Prod   memory: 5Gi 
+                    #Demo   cpu: "0.5"
+                    #Prod   cpu: "3.0"
+                    #Demo   memory: 1.7Gi
+                    #Prod   memory: 8Gi 
                   requests:
+                    #Demo   cpu: "0.5"
                     #Prod   cpu: "2.0"
+                    #Demo   memory: 1.7Gi
                     #Prod   memory: 5Gi

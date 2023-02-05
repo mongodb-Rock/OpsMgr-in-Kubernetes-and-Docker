@@ -38,6 +38,7 @@ fi
 #    cat ${expose} | sed -e "s/NAME/$name/"  > svc_cip_${name}.yaml
 #    kubectl apply -f svc_cip_${name}.yaml
 #fi
+sleep 5
 
 n=0
 while [ $n -lt 12 ]
@@ -53,7 +54,11 @@ do
     n=$((n+1))
 done
 
-hn=( $( get_hns.bash -n "${name}" -t "${serviceType}" ) )
+hn=( $( bin/get_hns.bash -n "${name}" ) )
+if [[ $? != 0 ]]
+then
+    printf "\n%s\n" "* * * - Error cant find names for splitHorizon"
+fi
 
 cat "$fn" | sed -e '/horizon/d' -e '/connectivity:/d' -e '/replicaSetHorizons:/d' > new
 echo "  connectivity:"                        | tee -a new
@@ -63,12 +68,5 @@ echo "      -" \"horizon-1\": \"${hn[1]}\" | tee -a new
 echo "      -" \"horizon-1\": \"${hn[2]}\" | tee -a new
 mv new "$fn"
 
-#initconf=$( sed -e "/${name//-/}_URI/d" init.conf )
-#printf "%s\n" "${initconf}" > init.conf
-#echo 
-#echo "Adding the connection string variable to init.conf:"
-#echo "${name//-/}_URI=\"mongodb://${hn0}:${np0},${hn1}:${np1},${hn2}:${np2}/?replicaSet=${name} -u \$dbuser -p \$dbpassword --authenticationDatabase admin \" " | tee -a init.conf
-#echo "${name//-/}_URI=\"mongodb://${dbuser}:${dbpassword}@${hn0}:${np0},${hn1}:${np1},${hn2}:${np2}/?replicaSet=${name}&authMechanism=SCRAM-SHA-256&authSource=admin\"" | tee -a init.conf
-#echo "${name//-/}_URI=\"mongodb://${dbuser}:${dbpassword}@${hn0}:${np0},${hn1}:${np1},${hn2}:${np2}/?replicaSet=${name}&authSource=admin\"" | tee -a init.conf
 #echo
-printf "${hn[*]%:*}" > dnsHorizon
+printf "${hn[*]%:*}"

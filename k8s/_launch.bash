@@ -77,7 +77,7 @@ replicasetName="myreplicaset"
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Generate splitHorizon configuration for External access to a Production DB ..."
 # deploy Replicated Database generate  splitHorizon configuration for External access to a Production DB
-deploy_Database.bash -n "myldaprs"  -l ${ldapType}      -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
+deploy_Database.bash -n "myldaprs" -l ${ldapType} -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
 replicasetName="myldaprs"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
@@ -85,7 +85,7 @@ printf "%s\n" "Generate configuration for External access to a Sharded Productio
 
 # deploy Sharded Databases Generate Config for External Access
 deploy_DatabaseSharded.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -v "$mdbVersion"
-shardingName="mysharded"
+shardedName="mysharded"
 
 
 printf "\n%s\n" "__________________________________________________________________________________________"

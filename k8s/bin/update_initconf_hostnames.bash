@@ -16,7 +16,7 @@ eval portType=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.spec.type} )
 
 if [[ $serviceType == "NodePort" ]]
 then
-    slist=( $(bin/get_hns.bash -n ${name} ) ) 
+    slist=( $(bin/get_hns.bash -n "${name}" ) ) 
     hostname="${slist[0]%:*}"
     slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
     opsMgrExtIp=${slist[0]}
@@ -87,7 +87,7 @@ then
 	dnslist=(  $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
 	iplist=(   $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
 else
-	list=( $( bin/get_hns.bash -n ${name} ) )
+	list=( $( bin/get_hns.bash -n "${name}" ) )
         dnslist=( ${list[*]%:*} ) # strip off port
 	n=0
 	for h in ${dnslist[*]}
@@ -143,7 +143,7 @@ then
 # sharded mongos
 name=( $( kubectl get svc|grep -v "${name}" | grep svc-external ) )
 name=${name[0]%%-svc*}
-list=( $( bin/get_hns.bash -n ${name} ) )
+list=( $( bin/get_hns.bash -n "${name}" ) )
 dnslist=( ${list[*]%:*} ) # strip off port
 
 n=0
