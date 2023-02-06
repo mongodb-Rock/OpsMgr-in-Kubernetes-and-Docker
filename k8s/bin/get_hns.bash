@@ -94,9 +94,9 @@ then
 	fi
     	if [[ ${#slist[@]} == 0 && $custerType == "openshift" ]]
 	then
-            # OpenShift read of names
-	    # slist=( $( kubectl get nodes -o json | jq -r '.items[].metadata.labels | select(."node-role.kubernetes.io/worker") | ."kubernetes.io/hostname" '))
+            # OpenShift worker hostnames - find worker vs master
             slist=( $(kubectl get nodes -o json | jq -r '.items[].metadata.labels | select((."node-role.kubernetes.io/infra" == null) and .storage == "pmem") | ."kubernetes.io/hostname" ' ) ) 
+	    # slist=( $( kubectl get nodes -o json | jq -r '.items[].metadata.labels | select(."node-role.kubernetes.io/worker") | ."kubernetes.io/hostname" '))
         fi
     	if [[ ${#slist[@]} == 0 ]] 
         then
