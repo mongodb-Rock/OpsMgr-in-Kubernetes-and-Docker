@@ -50,9 +50,13 @@ if [[ ${skipMakeCerts} = 1 || ${skipMakeCerts} == "-s" ]]
 then
     skip="-s"
 fi
-
-# deploy Ops Manager
+if [[ "${context}" == "docker-desktop" ]]
+then
+docker pull "quay.io/mongodb/mongodb-enterprise-ops-manager:$omVersion" # issue with docker not (re)pulling the image
+deploy_OM.bash -n "opsmanager" $skip  # [-n name] [-c cpu] [-m memory] [-d disk] [-v version] [-p] [-s]
+else
 deploy_OM.bash -n "opsmanager" $skip -c 0.5 -m 1Gi -d 4Gi -v "$omVersion"
+fi
 
 #printf "\n%s\n" "__________________________________________________________________________________________"
 #printf "%s\n" "Create the first Org in OM ..."
@@ -60,33 +64,45 @@ deploy_OM.bash -n "opsmanager" $skip -c 0.5 -m 1Gi -d 4Gi -v "$omVersion"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup Oplog1 DB for OM ..."
-# deploy Ops Manager Backup Oplog
-deploy_Database.bash -n "opsmanager-oplog"      -c "0.50" -m "2Gi"          -v "$appdbVersion"
-
+if [[ "${context}" == "docker-desktop" ]]
+then
+    deploy_Database.bash -n "opsmanager-oplog"      -c "0.33" -m "300Mi"        -v "$appdbVersion"
+else
+    deploy_Database.bash -n "opsmanager-oplog"      -c "0.50" -m "2Gi"          -v "$appdbVersion"
+fi
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup BlockStore1 DB for OM ..."
-# deploy Ops Manager Backup BlockStore
-deploy_Database.bash -n "opsmanager-blockstore" -c "0.50" -m "2Gi"          -v "$appdbVersion"
+if [[ "${context}" == "docker-desktop" ]]
+then
+    deploy_Database.bash -n "opsmanager-blockstore" -c "0.33" -m "300Mi"        -v "$appdbVersion"
+else
+    deploy_Database.bash -n "opsmanager-blockstore" -c "0.50" -m "2Gi"          -v "$appdbVersion"
+fi
+
 
 printf "\n%s\n" "__________________________________________________________________________________________"
-printf "%s\n" "Generate splitHorizon configuration for External access to a Production DB ..."
-deploy_Database.bash -n "myreplicaset"          -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
-replicasetName="myreplicaset"
+printf "%s\n" "Create a Production ReplicaSet Cluster with a splitHorizon configuration for External access ..."
+if [[ "${context}" == "docker-desktop" ]]
+then
+    deploy_Database.bash -n "myreplicaset" -l "${ldapType}" -c "0.50" -m "400Mi"        -v "6.0.1-ent"
+    replicasetName="myreplicaset"
+else
+    deploy_Database.bash -n "myreplicaset" -l "${ldapType}" -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
+    replicasetName="myreplicaset"
+fi
 
 printf "\n%s\n" "__________________________________________________________________________________________"
-printf "%s\n" "Generate splitHorizon configuration for External access to a Production DB ..."
-# deploy Replicated Database generate  splitHorizon configuration for External access to a Production DB
-deploy_Database.bash -n "myldaprs" -l ${ldapType} -c "1.00" -m "4Gi" -d "4Gi" -v "6.0.1-ent"
-replicasetName="myldaprs"
+printf "%s\n" "Create a Production Sharded Cluster  ..."
+if [[ "${context}" == "docker-desktop" ]]
+then
+    printf "\n%s\n" " **** skipping sharded deployment - not enough resources ***"
+    # deploy_DatabaseSharded.bash -n "mysharded"    -c "0.33" -m "400Mi"        -s "1"        -v "$mdbVersion"
+else
 
-printf "\n%s\n" "__________________________________________________________________________________________"
-printf "%s\n" "Generate configuration for External access to a Sharded Production DB ..."
-
-# deploy Sharded Databases Generate Config for External Access
-deploy_DatabaseSharded.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -v "$mdbVersion"
-shardedName="mysharded"
-
+    deploy_DatabaseSharded.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -v "$mdbVersion"
+    shardedName="mysharded"
+fi
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Update init.conf with IPs and put k8s internal hostnames in /etc/hosts ..."
