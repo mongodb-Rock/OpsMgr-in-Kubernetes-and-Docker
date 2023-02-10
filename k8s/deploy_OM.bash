@@ -101,18 +101,13 @@ fi
 # serviceType="LoadBalancer"
 # make manifest from template
 cat mdbom_template.yaml | sed \
-    -e "s/$tlsc/$tlsr/" \
     -e "s/VERSION/$omVer/" \
     -e "s/APPDBVER/$appdbVer/" \
-    -e "s/CPU/$cpu/" \
-    -e "s/DISK/$dsk/" \
-    -e "s/DBUSER/$dbuserlc/" \
-    -e "s/#NP  /$NP/" \
-    -e "s/#LB  /$LB/" \
     -e "s/MMSADMINEMAILADDR/$user/" \
     -e "s/MMSEMAIL/$mmsemail/" \
     -e "s/MMSMAILHOSTNAME/$mmsmailhostname/" \
     -e "s/MMSMAILUSERNAME/$mmsmailusername/" \
+    -e "s/MMSMAILPASSWORD/$mmsmailpassword/" \
     -e "s/MMSUSERSVCCLASS/$mmsusersvcclass/" \
     -e "s/MMSLDAPBINDDN/$mmsldapbinddn/" \
     -e "s/MMSLDAPBINDPASSWORD/$mmsldapbindpassword/" \
@@ -126,7 +121,13 @@ cat mdbom_template.yaml | sed \
     -e "s/MMSLDAPUSERLASTNAME/$mmsldapuserlastname/" \
     -e "s/MMSLDAPUSERGROUP/$mmsldapusergroup/" \
     -e "s/MMSLDAPUSERSEARCHATTRIBUTE/$mmsldapusersearchattribute/" \
+    -e "s/DBUSER/$dbuserlc/" \
+    -e "s/CPU/$cpu/" \
+    -e "s/DISK/$dsk/" \
     -e "s/MEM/$mem/" \
+    -e "s/#NP  /$NP/" \
+    -e "s/#LB  /$LB/" \
+    -e "s/$tlsc/$tlsr/" \
     -e "s/$replace//" \
     -e "s/NAME/$name/" > "${mdbom}"
 
