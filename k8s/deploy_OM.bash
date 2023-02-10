@@ -113,7 +113,19 @@ cat mdbom_template.yaml | sed \
     -e "s/MMSEMAIL/$mmsemail/" \
     -e "s/MMSMAILHOSTNAME/$mmsmailhostname/" \
     -e "s/MMSMAILUSERNAME/$mmsmailusername/" \
-    -e "s/MMSMAILPASSWORD/$mmsmailpassword/" \
+    -e "s/MMSUSERSVCCLASS/$mmsusersvcclass/" \
+    -e "s/MMSLDAPBINDDN/$mmsldapbinddn/" \
+    -e "s/MMSLDAPBINDPASSWORD/$mmsldapbindpassword/" \
+    -e "s/MMSLDAPGLOBALROLEOWNER/$mmsldapglobalroleowner/" \
+    -e "s/MMSLDAPGROUPBASEDN/$mmsldapgroupbasedn/" \
+    -e "s/MMSLDAPGROUPMEMBER/$mmsldapgroupmember/" \
+    -e "s?MMSLDAPURL?$mmsldapurl?" \
+    -e "s/MMSLDAPUSERBASEDN/$mmsldapuserbasedn/" \
+    -e "s/MMSLDAPUSEREMAIL/$mmsldapuseremail/" \
+    -e "s/MMSLDAPUSERFIRSTNAME/$mmsldapuserfirstname/" \
+    -e "s/MMSLDAPUSERLASTNAME/$mmsldapuserlastname/" \
+    -e "s/MMSLDAPUSERGROUP/$mmsldapusergroup/" \
+    -e "s/MMSLDAPUSERSEARCHATTRIBUTE/$mmsldapusersearchattribute/" \
     -e "s/$replace//" \
     -e "s/NAME/$name/" > "${mdbom}"
 
