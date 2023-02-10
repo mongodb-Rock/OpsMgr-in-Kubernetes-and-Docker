@@ -13,7 +13,7 @@ echo '{
         }]
       }' | sed -e"s/ORGID/${orgId}/" > data.json
 
-curl --user "${publicKey}:${privateKey}" --digest \
+curl $curlOpts --user "${publicKey}:${privateKey}" --digest \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
      --request PATCH "${opsMgrExtUrl2}/api/public/v1.0/users/${userId}" \

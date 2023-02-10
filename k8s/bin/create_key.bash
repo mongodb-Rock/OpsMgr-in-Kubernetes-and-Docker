@@ -16,7 +16,7 @@ if [[ $publicKey == "" ]]
 then
     file=/tmp/key.json
     rm "${file}" > /dev/null 2>&1
-curl --insecure --user "${publicApiKey}:${privateApiKey}" --digest \
+curl $curlOpts --insecure --user "${publicApiKey}:${privateApiKey}" --digest \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
   --request POST "${opsMgrExtUrl2}/api/public/v1.0/admin/apiKeys?pretty=true" \

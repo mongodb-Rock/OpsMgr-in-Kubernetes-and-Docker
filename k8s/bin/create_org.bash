@@ -9,7 +9,7 @@ ifile=data.json
 echo '{ "name" : "NAME" }' | sed -e"s/ORGID/${orgId}/" -e"s/NAME/${orgname}/" > ${ifile}
 
 #rm ${ofile} > /dev/null 2>&1
-oid=$( curl --silent --user "${publicKey}:${privateKey}" --digest \
+oid=$( curl $curlOpts --silent --user "${publicKey}:${privateKey}" --digest \
  --header 'Accept: application/json' \
  --header 'Content-Type: application/json' \
  --request POST "${opsMgrExtUrl2}/api/public/v1.0/orgs?pretty=true" \
