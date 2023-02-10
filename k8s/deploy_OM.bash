@@ -104,7 +104,6 @@ cat mdbom_template.yaml | sed \
     -e "s/$tlsc/$tlsr/" \
     -e "s/VERSION/$omVer/" \
     -e "s/APPDBVER/$appdbVer/" \
-    -e "s/MEM/$mem/" \
     -e "s/CPU/$cpu/" \
     -e "s/DISK/$dsk/" \
     -e "s/DBUSER/$dbuserlc/" \
@@ -127,6 +126,7 @@ cat mdbom_template.yaml | sed \
     -e "s/MMSLDAPUSERLASTNAME/$mmsldapuserlastname/" \
     -e "s/MMSLDAPUSERGROUP/$mmsldapusergroup/" \
     -e "s/MMSLDAPUSERSEARCHATTRIBUTE/$mmsldapusersearchattribute/" \
+    -e "s/MEM/$mem/" \
     -e "s/$replace//" \
     -e "s/NAME/$name/" > "${mdbom}"
 
