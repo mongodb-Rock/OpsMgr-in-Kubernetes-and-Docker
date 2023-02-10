@@ -21,14 +21,14 @@ spec:
               resources:  # 3Gi a good size for a demo -- use 5Gi or more for larger clusters in production
                 limits:
                   #Demo   cpu: "0.75"
-                  #Prod   cpu: "3.0"
+                  #Prod   cpu: "4.0"
                   #Demo   memory: 3Gi
-                  #Prod   memory: 8Gi
+                  #Prod   memory: 12Gi
                 requests:
                   #Demo   cpu: "0.75"
                   #Prod   cpu: "2.0"
                   #Demo   memory: 3Gi
-                  #Prod   memory: 5Gi
+                  #Prod   memory: 8Gi
 
   #TLS security: # enables TLS for Ops Manager allowing it to serve traffic over HTTPS
   #TLS   tls:

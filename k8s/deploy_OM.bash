@@ -22,10 +22,11 @@ do
 done
 shift "$(($OPTIND -1))"
 
+# for OM App-DB
 name=${name:-opsmanager}
-cpu="${cpu:-0.25}"
-mem="${mem:-400Mi}"
-dsk="${dsk:-2Gi}"
+cpu="${cpu:-2}"
+mem="${mem:-8Gi}"
+dsk="${dsk:-40Gi}"
 omVer="${omVer:-$omVersion}"
 appdbVer="${appdbVer:-$appdbVersion}"
 skipMakeCerts=${skipMakeCerts:-0}
