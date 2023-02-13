@@ -4,7 +4,7 @@ d=$( dirname "$0" )
 cd "${d}"
 source init.conf
 
-while getopts 'n:v:a:c:m:d:sh' opt
+while getopts 'n:v:a:c:m:d:gh' opt
 do
   case "$opt" in
     n) name="$OPTARG" ;;
@@ -13,9 +13,9 @@ do
     c) cpu="$OPTARG" ;;
     m) mem="$OPTARG" ;;
     d) dsk="$OPTARG" ;;
-    s) skipMakeCerts=1 ;; 
+    g) skipMakeCerts=1 ;;
     ?|h)
-      echo "Usage: $(basename $0) [-n name] [-v omVersion][-a appdbVersion] [-c cpu] [-m memory] [-d disk] [-p] [-s]"
+      echo "Usage: $(basename $0) [-n name] [-g] [-v omVersion][-a appdbVersion] [-c cpu] [-m memory] [-d disk]"
       exit 1
       ;;
   esac
@@ -24,7 +24,7 @@ shift "$(($OPTIND -1))"
 
 # for OM App-DB
 name=${name:-opsmanager}
-cpu="${cpu:-2}"
+cpu="${cpu:-2.00}"
 mem="${mem:-8Gi}"
 dsk="${dsk:-40Gi}"
 omVer="${omVer:-$omVersion}"
@@ -44,7 +44,7 @@ then
     printf "\n%s\n" "__________________________________________________________________________________________"
     printf "%s\n" "Getting Certs status..."
     # Generate CA and create certs for OM and App-db
-    rm "${PWD}/certs/${name}"*.* "${PWD}/certs/queryable-backup.pem" > /dev/null 2>&1
+    rm "${PWD}/certs/${name}-[svc,db]".* "${PWD}/certs/queryable-backup.pem" > /dev/null 2>&1
     "${PWD}/certs/make_OM_certs.bash" ${name}
     appdb=${name}-db
     "${PWD}/certs/make_db_certs.bash" ${appdb} 
@@ -123,8 +123,8 @@ cat mdbom_template.yaml | sed \
     -e "s/MMSLDAPUSERSEARCHATTRIBUTE/$mmsldapusersearchattribute/" \
     -e "s/DBUSER/$dbuserlc/" \
     -e "s/CPU/$cpu/" \
-    -e "s/DISK/$dsk/" \
     -e "s/MEM/$mem/" \
+    -e "s/DISK/$dsk/" \
     -e "s/#NP  /$NP/" \
     -e "s/#LB  /$LB/" \
     -e "s/$tlsc/$tlsr/" \

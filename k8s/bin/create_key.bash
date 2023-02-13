@@ -9,7 +9,7 @@ privateApiKey="$( kubectl get secret ${namespace}-opsmanager-admin-key -o json |
 
     conf=$( sed -e '/adminUser/d' -e '/privateApiKey/d' -e '/publicApiKey/d'  custom.conf )
     printf "%s\n" "$conf" > custom.conf
-    echo  publicApiKey="${publicApiKey}"   | tee custom.conf
+    echo  publicApiKey="${publicApiKey}"   | tee -a custom.conf
     echo  privateApiKey="${privateApiKey}" | tee -a custom.conf
 
 if [[ $publicKey == "" ]]

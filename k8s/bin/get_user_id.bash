@@ -16,8 +16,8 @@ errorCode=$?
 
 conf=$( sed -e '/userId/d' custom.conf ) 
 printf "%s\n" "${conf}" > custom.conf
-printf "\n%s\n" "User $username is:"
-echo  userId="$( cat ${file} | jq .id )" | tee -a custom.conf
+#printf "\n%s\n" "User $username is:"
+echo  userId="$( cat ${file} | jq .id )" >> custom.conf
 
 exit $errorCode
 

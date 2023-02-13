@@ -100,7 +100,7 @@ spec:
     mms.mail.transport: smtp
     mms.user.bypassInviteForExistingUsers: "true"
     mms.publicApi.whitelistEnabled: "false"
-    mms.userSvcClass: MMSUSERSVCCLASS
+    #mms.userSvcClass: MMSUSERSVCCLASS
     mms.ldap.bindDn: "MMSLDAPBINDDN"
     mms.ldap.bindPassword: MMSLDAPBINDPASSWORD
     mms.ldap.global.role.owner: "MMSLDAPGLOBALROLEOWNER"
@@ -111,7 +111,7 @@ spec:
     mms.ldap.user.email: "MMSLDAPUSEREMAIL"
     mms.ldap.user.firstName: MMSLDAPUSERFIRSTNAME
     mms.ldap.user.lastName: MMSLDAPUSERLASTNAME
-    mms.ldap.user.group: MMSLDAPUSERGROUP
+    #mms.ldap.user.group: MMSLDAPUSERGROUP
     mms.ldap.user.searchAttribute: MMSLDAPUSERSEARCHATTRIBUTE
     automation.versions.source: remote # hybrid
     mongodb.release.autoDownload: "false" # stop downloads of binaries (unless you need to demo recovery)
