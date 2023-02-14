@@ -54,11 +54,11 @@ deploy_OM.bash $skip -n "${omName}" -c "2.00" -m "8Gi" -d "40Gi" -v "$omVersion"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup Oplog1 DB for OM ..."
-    deploy_Database.bash -n "${omName}-oplog" $skip      -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
+    deploy_Cluster.bash -n "${omName}-oplog" $skip      -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup BlockStore1 DB for OM ..."
-    deploy_Database.bash -n "${omName}-blockstore" $skip -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
+    deploy_Cluster.bash -n "${omName}-blockstore" $skip -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
 
 if [[ ! -e custom.conf ]]
 then
@@ -72,13 +72,13 @@ source custom.conf
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create a Production ReplicaSet Cluster with a splitHorizon configuration for External access ..."
     projectName="DemoProject1"
-    deploy_Database.bash -n "myreplicaset" -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "${projectName}"
+    deploy_Cluster.bash -n "myreplicaset" -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "${projectName}"
     cluster1="$projectName-myreplicaset"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create a Production Sharded Cluster  ..."
     projectName="DemoProject2"
-    deploy_DatabaseSharded.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -o "${orgId}" -p "${projectName}" # -v "$mdbVersion"
+    deploy_Cluster.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -o "${orgId}" -p "${projectName}" # -v "$mdbVersion"
     cluster2="$projectName-mysharded"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
