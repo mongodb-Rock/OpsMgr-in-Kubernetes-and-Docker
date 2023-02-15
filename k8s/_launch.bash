@@ -52,6 +52,8 @@ then
 fi
 deploy_OM.bash $skip -n "${omName}" -c "2.00" -m "8Gi" -d "40Gi" -v "$omVersion"
 
+if [[ ${omBackup} == "true" ]]
+then
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup Oplog1 DB for OM ..."
     deploy_Cluster.bash -n "${omName}-oplog" $skip      -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
@@ -59,15 +61,13 @@ printf "%s\n" "Create the Backup Oplog1 DB for OM ..."
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup BlockStore1 DB for OM ..."
     deploy_Cluster.bash -n "${omName}-blockstore" $skip -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
-
-if [[ ! -e custom.conf ]]
-then
-    printf "\n%s\n" "__________________________________________________________________________________________"
-    printf "%s\n" "Create the first Org in OM ..."
-    orgName="DemoOrg"
-    bin/deploy_org.bash "${orgName}"
 fi
-source custom.conf
+
+printf "\n%s\n" "__________________________________________________________________________________________"
+printf "%s\n" "Create a custom Org to put your projects in ..."
+# Create the Org and put info in custom.conf
+bin/deploy_org.bash # -o NewOrgName
+test -e custom.conf && source custom.conf
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create a Production ReplicaSet Cluster with a splitHorizon configuration for External access ..."
