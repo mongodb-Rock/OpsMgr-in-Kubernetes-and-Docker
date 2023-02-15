@@ -66,23 +66,26 @@ fi
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create a custom Org to put your projects in ..."
 # Create the Org and put info in custom.conf
-bin/deploy_org.bash # -o NewOrgName
+bin/deploy_org.bash  -o ThriveAI
 test -e custom.conf && source custom.conf
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create a Production ReplicaSet Cluster with a splitHorizon configuration for External access ..."
-    projectName="DemoProject1"
-    deploy_Cluster.bash -n "myreplicaset" -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "${projectName}"
-    cluster1="$projectName-myreplicaset"
+    projectName="mda"
+    deploy_Cluster.bash -n "mda-replicaset" -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "${projectName}"
 
-printf "\n%s\n" "__________________________________________________________________________________________"
-printf "%s\n" "Create a Production Sharded Cluster  ..."
-    projectName="DemoProject2"
-    deploy_Cluster.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -o "${orgId}" -p "${projectName}" # -v "$mdbVersion"
-    cluster2="$projectName-mysharded"
+    projectName="msg-mgmt"
+    deploy_Cluster.bash -n "msg-mgmt-replicaset" -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "${projectName}"
 
-printf "\n%s\n" "__________________________________________________________________________________________"
-printf "%s\n" "Update init.conf with IPs and put k8s internal hostnames in /etc/hosts ..."
-update_initconf_hostnames.bash "opsmanager" "$cluster1" "$cluster2"
+
+#printf "\n%s\n" "__________________________________________________________________________________________"
+#printf "%s\n" "Create a Production Sharded Cluster  ..."
+#    projectName="DemoProject2"
+#    deploy_Cluster.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -o "${orgId}" -p "${projectName}" # -v "$mdbVersion"
+#    cluster2="$projectName-mysharded"
+
+#printf "\n%s\n" "__________________________________________________________________________________________"
+#printf "%s\n" "Update init.conf with IPs and put k8s internal hostnames in /etc/hosts ..."
+#update_initconf_hostnames.bash "opsmanager" "$cluster1" "$cluster2"
 
 date
