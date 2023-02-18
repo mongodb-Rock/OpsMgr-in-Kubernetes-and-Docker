@@ -52,7 +52,7 @@ then
 fi
 deploy_OM.bash $skip -n "${omName}" -c "2.00" -m "8Gi" -d "40Gi" -v "$omVersion"
 
-if [[ ${omBackup} == "true" ]]
+if [[ ${omBackup} == true ]]
 then
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup Oplog1 DB for OM ..."
@@ -65,18 +65,16 @@ fi
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create a custom Org to put your projects in ..."
-# Create the Org and put info in custom.conf
-bin/deploy_org.bash  -o ThriveAI
+# Create the Org and put orgId info in custom.conf
+bin/deploy_org.bash -o ${orgName}
 test -e custom.conf && source custom.conf
 
 printf "\n%s\n" "__________________________________________________________________________________________"
-printf "%s\n" "Create a Production ReplicaSet Cluster with a splitHorizon configuration for External access ..."
-    projectName="mda"
-    deploy_Cluster.bash -n "mda-replicaset" -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "${projectName}"
-
-    projectName="msg-mgmt"
-    deploy_Cluster.bash -n "msg-mgmt-replicaset" -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "${projectName}"
-
+printf "%s\n" "Create Production ReplicaSet Cluster(s) with a splitHorizon configuration for External access ..."
+set -x
+    deploy_Cluster.bash -n "mda-replicaset"       -e -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "mda"
+    deploy_Cluster.bash -n "msg-mgmt-replicaset" -e  -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "msg-mgt"
+set +x
 
 #printf "\n%s\n" "__________________________________________________________________________________________"
 #printf "%s\n" "Create a Production Sharded Cluster  ..."
