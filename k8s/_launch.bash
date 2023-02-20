@@ -42,7 +42,9 @@ printf "\n%s\n" "Using context: ${context}"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Deploy the Operator ..."
+(set -x
 deploy_Operator.bash
+)
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Deploy OM and wait until Running status..."
@@ -50,35 +52,45 @@ if [[ ${skipMakeCerts} = 1 || ${skipMakeCerts} == "-s" || ${skipMakeCerts} == "-
 then
     export skip="-g"
 fi
+(set -x
 deploy_OM.bash $skip -n "${omName}" -c "2.00" -m "8Gi" -d "40Gi" -v "$omVersion"
+)
 
 if [[ ${omBackup} == true ]]
 then
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup Oplog1 DB for OM ..."
+    (set -x
     deploy_Cluster.bash -n "${omName}-oplog" $skip      -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
-
+    )
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create the Backup BlockStore1 DB for OM ..."
+    (set -x
     deploy_Cluster.bash -n "${omName}-blockstore" $skip -c "2.00" -m "4Gi" -d "40Gi" -v "$appdbVersion"
+    )
 fi
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create a custom Org to put your projects in ..."
 # Create the Org and put orgId info in custom.conf
+(set -x
 bin/deploy_org.bash -o ${orgName}
+)
 test -e custom.conf && source custom.conf
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create Production ReplicaSet Cluster(s) with a splitHorizon configuration for External access ..."
-set -x
+    (set -x; 
     deploy_Cluster.bash -n "mda-replicaset"       -e -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "mda"
+    )
+
+    (set -x; 
     deploy_Cluster.bash -n "msg-mgmt-replicaset" -e  -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "msg-mgt"
-set +x
+    )
 
 #printf "\n%s\n" "__________________________________________________________________________________________"
 #printf "%s\n" "Create a Production Sharded Cluster  ..."
-#    projectName="DemoProject2"
+#    projectName="myProject2"
 #    deploy_Cluster.bash -n "mysharded"      -c "1.00" -m "2Gi" -d "4Gi" -s "2" -r "2" -o "${orgId}" -p "${projectName}" # -v "$mdbVersion"
 #    cluster2="$projectName-mysharded"
 
