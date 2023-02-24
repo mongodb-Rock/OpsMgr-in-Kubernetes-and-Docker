@@ -74,7 +74,7 @@ printf "\n%s\n" "_______________________________________________________________
 printf "%s\n" "Create a custom Org to put your projects in ..."
 # Create the Org and put orgId info in custom.conf
 (set -x
-bin/deploy_org.bash -o ${orgName}
+bin/deploy_org.bash -o ${orgName} # ThriveAI
 )
 test -e custom.conf && source custom.conf
 
@@ -85,7 +85,7 @@ printf "%s\n" "Create Production ReplicaSet Cluster(s) with a splitHorizon confi
     )
 
     (set -x; 
-    deploy_Cluster.bash -n "msg-mgmt-replicaset" -e  -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "msg-mgt"
+    deploy_Cluster.bash -n "msg-mgmt-replicaset" -e  -l "${ldapType}" -c "2.00" -m "8Gi" -d "40Gi" -o "${orgId}" -p "msg-mgmt"
     )
 
 #printf "\n%s\n" "__________________________________________________________________________________________"
