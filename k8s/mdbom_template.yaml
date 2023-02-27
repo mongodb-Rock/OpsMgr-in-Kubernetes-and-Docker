@@ -107,7 +107,7 @@ spec:
     mms.ldap.user.group: MMSLDAPUSERGROUP # deprecated
     mms.ldap.user.searchAttribute: MMSLDAPUSERSEARCHATTRIBUTE
     automation.versions.source: remote # hybrid
-    mongodb.release.autoDownload: "false" # stop downloads of binaries (unless you need to demo recovery)
+    mongodb.release.autoDownload: "true" # stop downloads of binaries (unless you need to demo recovery)
     mongodb.release.autoDownload.enterprise: "true"
     mongodb.release.modulePreference: enterpriseRequired
     #TLS brs.queryable.pem: /opt/mongodb/mms/secrets/queryable-backup.pem # stored in a secret
