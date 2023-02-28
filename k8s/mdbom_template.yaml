@@ -21,10 +21,10 @@ spec:
               resources:  # 3Gi a good size for a demo -- use 5Gi or more for larger clusters in production
                 limits:
                   cpu:    "OMCPU"
-                  memory: OMMEM
+                  memory: OMMEMLIM
                 requests:
                   cpu:    "OMCPU"
-                  memory: OMMEM
+                  memory: OMMEMREQ 
 
   #TLS security: # enables TLS for Ops Manager allowing it to serve traffic over HTTPS
   #TLS   tls:
