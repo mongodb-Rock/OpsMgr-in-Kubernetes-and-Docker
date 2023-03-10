@@ -34,5 +34,5 @@ fi
 source custom.conf
 # user can be supplied or is in init.conf
 # add user to the org (orgId is in custom.conf)
-bin/add_user_to_org.bash -u "${user}" -i "${orgId}"
+bin/add_user_to_org.bash -u "${user}" -i "${orgName_orgId}"
 #cat custom.conf

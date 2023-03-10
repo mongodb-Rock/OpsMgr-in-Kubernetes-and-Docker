@@ -48,6 +48,8 @@ printf "%s\n" "Create a custom Org to put your projects in ..."
 bin/deploy_org.bash -o ${orgName} # ThriveAI
 )
 test -e custom.conf && source custom.conf
+orgId="${orgName}_orgId"
+orgId="${!orgId}"
 
 printf "\n%s\n" "__________________________________________________________________________________________"
 printf "%s\n" "Create Production ReplicaSet Cluster(s) with a splitHorizon configuration for External access ..."
