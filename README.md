@@ -209,4 +209,4 @@ Files are located in the k8s directory of the repository.First cd to the k8s dir
 
 Files are located in the k8s directory of the repository.
 
-* [deploy_Cluster.bash]()
+* [deploy_Cluster.bash](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker/blob/master/scripts_deploy_Cluster.md)
