@@ -24,4 +24,4 @@ else
 fi
 kubectl apply -f "${myoperator}"
 
-[[ ${tls} == 1 ]] && certs/make_cert_issuer.bash $namespace $issuerName
+[[ ${tls} == 1 ]] && certs/make_cert_issuer.bash ${namespace} ${issuerName} ${issuerVersion}

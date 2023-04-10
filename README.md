@@ -1,29 +1,26 @@
-# OpsMgr K8s Openshitf
+# OpsMgr K8s Openshift
 
-## In Kubernetes Summary:
+## Summary:
 
 - These scripts will install into a Kubernetes cluster:
   * Ops Manager v6
-  * its app DB
-  * a blockstore DB for backups
-  * an oplog DB for continous backups
-- 2 Production DBs
-  * a example replica set cluster
-  * a example sharded cluster.
+  		* the appDB
+  		* a blockstore DB for backups
+  		* an oplog DB for continous backups
+- 2 Sample Production DBs
+  * a replica set cluster
+  * a sharded cluster.
   * TLS Certs are created using a self-signed CA.
   * queriable backup is available too!
 
-### Step 1. Configure K8s
+### Step 1. Create or login to an Openshift/K8s Cluster
 
-- Preference setup:
+- To run a small production workload, a cluster with the following resources is needed:
 
-  * Kubernetes - Check Enable Kubernetes with Docker or create one in AWS (EKS).
-  * Reources/Advanced:
-    * Configure 8 Cores
-    * Configure 10.5GB of Memory
-    * Configure 2GB of swap
-    * Disk Image size (~40GB)
-- Restart to enable new settings
+  * Openshift/Kubernetes cluster typical resources:
+    * Configure 32 Cores
+    * Configure 128GB of Memory
+    * Disk 500GB-4000TB
 
 ### Step 2. Launch the Services
 
@@ -46,7 +43,7 @@ the **_launch.bash** script runs several "deploy" scripts for each of the follow
   - Deploy a DB - three more are created
   - Oplog1 and Blockstore1 dbs complete the Backup setup for OM
   - myreplicaset is a "Production" DB and has a splitHorizon configuration for external cluster access
-    - connect via ``Misc/connect_external.bash`` script
+    - connect via ``bin/connect_external.bash`` script
   - Monitors the progress until the pods are ready
 
 ### Step 3. Login to Ops Manager
