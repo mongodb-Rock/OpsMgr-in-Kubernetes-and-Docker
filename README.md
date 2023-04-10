@@ -4,9 +4,9 @@
 
 - These scripts will install into a Kubernetes cluster:
   * Ops Manager v6
-  		* the appDB
-  		* a blockstore DB for backups
-  		* an oplog DB for continous backups
+    * the appDB
+    * a blockstore DB for backups
+    * an oplog DB for continous backups
 - 2 Sample Production DBs
   * a replica set cluster
   * a sharded cluster.
@@ -186,11 +186,27 @@ mmsldapuserfirstname="givenName"
 mmsldapuserlastname="sn"
 mmsldapuseremail="mail"
 ```
+
 ### Mail Relay Account
+
 This is where you setup how mail will be sent out via OpsManager.
+
 ```
 mmsemail="account@foo.com"
 mmsmailhostname="smtp.relay.net"
 mmsmailusername="yourname"
 mmsmailpassword="yourpassword"
 ```
+
+## Launch Scripts README
+
+Files are located in the k8s directory of the repository.First cd to the k8s director
+
+* [_launch_Clusters.bash](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker/blob/master/scripts_launch_Clusters.md)
+* [_launch_OM.bash](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker/blob/master/scripts_launch_OM.md)
+
+## Deploy Scripts README
+
+Files are located in the k8s directory of the repository.
+
+* [deploy_Cluster.bash]()
