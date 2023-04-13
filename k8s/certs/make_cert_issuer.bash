@@ -60,3 +60,4 @@ then
 fi
 done
 printf "%s\n" "... Done"
+exit 0

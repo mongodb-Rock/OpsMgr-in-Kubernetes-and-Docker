@@ -2,16 +2,16 @@
 
 ## Summary:
 
-- These scripts will install into a Kubernetes cluster:
+- These scripts will install MongoDB and Ops Manager into a Kubernetes/Openshift cluster:
   * Ops Manager v6
-    * the appDB
-    * a blockstore DB for backups
-    * an oplog DB for continous backups
-- 2 Sample Production DBs
+    * the appDB cluster
+    * a blockstore cluster for PIT backups
+    * an oplog cluster for support of continous backups
+- Sample Production Clusters (DBs)
   * a replica set cluster
-  * a sharded cluster.
-  * TLS Certs are created using a self-signed CA.
-  * queriable backup is available too!
+  * a sharded cluster
+  * TLS Certs are created using a self-signed CA or customer provided CA.
+  * Queriable backup is available too!
 
 ### Step 1. Create or login to an Openshift/K8s Cluster
 
@@ -28,32 +28,34 @@ the **_launch.bash** script runs several "deploy" scripts for each of the follow
 
 - Script 1: **deploy_Operator.bash**
 
-  - Setup the OM enviroment
+  - Setup the OM environment
   - Defines the namespace
   - Deploys the MongoDB Enterprise K8s Operator
+  - Deploys the optional cert-manager
+
 - Script 2: **deploy_OM.bash**
 
-  - Setup the Ops Manager enviroment
+  - Setup the Ops Manager (OM) environment
   - Deploy the OM Resources
-    - OpsManager
+    - Ops Manager 
     - AppDB
-  - Monitors the progress of OM for Readiness
+  - Monitors the progress of OM for readiness
 - Script 3: **deploy_Database.bash** and **deploy_DatabaseSharded.bash**
 
-  - Deploy a DB - three more are created
-  - Oplog1 and Blockstore1 dbs complete the Backup setup for OM
+  - Deploy a Cluster (DB) - several clusters are created
+  - Oplog1 and Blockstore1 Clusters complete the Backup setup for OM
   - myreplicaset is a "Production" DB and has a splitHorizon configuration for external cluster access
     - connect via ``bin/connect_external.bash`` script
-  - Monitors the progress until the pods are ready
+  - the script monitors the progress of the deployment until the pods are ready
 
 ### Step 3. Login to Ops Manager
 
-- login to OM at https://opsmanager-svc.mongodb.svc.cluster.local:8443
+- login to OM at https://opsmgr.mydomain.com:8443
 - the admin user credentials are set in ``init.conf``
-  - the scripts also create a hostname entry such as:
-    ``127.0.0.1       opsmanager-svc.mongodb.svc.cluster.local # opsmgr``
+  - the script also creates a hostname entry such as:
+    ``192.168.x.x       opsmanager-svc.mongodb.svc.cluster.local opsmgr.mydomain.com``
     into the ``/etc/hosts`` file
-  - Note: if you add the custom TLS certificate authority (certs/ca.crt) to your keystore, this allows seamless unchallenged secure https access
+  - Note: if you add the self-signed TLS certificate authority (certs/ca.crt) to your keystore, this allows seamless unchallenged secure https access
 
 ## Configuration
 
@@ -113,7 +115,7 @@ bddsk="100Gi"
 
 ### Some Deployment Options
 
-This is where TLS and OM Backup can be enabled or disabled.
+This section sets up the use of TLS and if OM Backup is enabled as well a the external DNS name for the OM instance.
 
 ```
 tls=1 # yes (0 = no)
@@ -124,7 +126,7 @@ omExternalName="om.${namespace}.local" # edit to provide a external DNS name for
 
 ### Exposed Service Type
 
-Here you will be selecting either LoadBalancer or NodePort.  This field is a string enum and must be exact.  Here we have been using NodePort for the deployments.
+If you plan to connect to Cluster resources from outside of the K8s cluster then the pods needs services - either LoadBalancer or NodePort.  This field is a string enum and must be exact.  If there is no LoadBalancer available, then use NodePort for the deployments.
 
 ```
 serviceType="NodePort" # serviceType="LoadBalancer"
@@ -132,7 +134,7 @@ serviceType="NodePort" # serviceType="LoadBalancer"
 
 ### OpsManager Admin
 
-Here you set your opsmanager admin details.  Since LDAP will be in use for authentification you must set this to you sAMAccountName with a password, then after deployment change the OpsManager Auth type to LDAP.  This will allow you to save the changes and make the switch over to LDAP auth.
+To set the opsmanager admin details change the name/passord for the initial OM admim user.  If you plan to use LDAP for authentification, you will need to set this user a user that is also in LDAP - e.g use sAMAccountName with an arbitrary password.  Then after the deployment, one changes the OpsManager Auth type from the app DB to use LDAP in the configuration settings. 
 
 ```
 user="sAMAccountName"
@@ -143,7 +145,7 @@ lastName="lastName"
 
 ### DB Users
 
-Name your first database user here.
+Create/indentify the first database user here:
 
 ```
 dbuser="dbAdmin"
@@ -153,7 +155,7 @@ ldapUser="dbAdmin" # name of a db user
 
 ### LDAP settings - for Cluster/DB Users
 
-This is your company LDAP settings.  Here you select if it's ldap or secure ldaps.  Point to you ldap server, set your bind user, and ldap query structure.
+You can pre-populate the configuration with your LDAP settings for use of LDAP for DB users.  These identify the key parameters for LDAP usage as outlined in the OM documentation.
 
 ```
 ldapType="ldap" # ldaps enum ('ldap','ldaps', # anything other value turns ldap off)
@@ -168,9 +170,9 @@ ldapTimeoutMS=10000
 ldapUserCacheInvalidationInterval=30
 ```
 
-### LDAP settings - ops manager
+### LDAP settings - Ops Manager AuthN/AuthZ
 
-These are the settings the Ops Manger will use after a deployment is made and LDAP is then selected as the authorization method.
+You can also pre-populate the configuration with your LDAP settings for use of LDAP for the Ops Manager user Authentication and Authorization.  These identify the key parameters for LDAP usage as outlined in the OM documentation. These are the settings the Ops Manger can use to swith to LDAP is then selected as the OM authorization method.
 
 ```
 mmsldapurl="ldap://cs.msds.kp.org:389"
@@ -189,8 +191,7 @@ mmsldapuseremail="mail"
 
 ### Mail Relay Account
 
-This is where you setup how mail will be sent out via OpsManager.
-
+To set up for e-mail based alerts, configure e-mail here or or set up later.
 ```
 mmsemail="account@foo.com"
 mmsmailhostname="smtp.relay.net"
