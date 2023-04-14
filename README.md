@@ -32,12 +32,11 @@ the **_launch.bash** script runs several "deploy" scripts for each of the follow
   - Defines the namespace
   - Deploys the MongoDB Enterprise K8s Operator
   - Deploys the optional cert-manager
-
 - Script 2: **deploy_OM.bash**
 
   - Setup the Ops Manager (OM) environment
   - Deploy the OM Resources
-    - Ops Manager 
+    - Ops Manager
     - AppDB
   - Monitors the progress of OM for readiness
 - Script 3: **deploy_Database.bash** and **deploy_DatabaseSharded.bash**
@@ -134,7 +133,7 @@ serviceType="NodePort" # serviceType="LoadBalancer"
 
 ### OpsManager Admin
 
-To set the opsmanager admin details change the name/passord for the initial OM admim user.  If you plan to use LDAP for authentification, you will need to set this user a user that is also in LDAP - e.g use sAMAccountName with an arbitrary password.  Then after the deployment, one changes the OpsManager Auth type from the app DB to use LDAP in the configuration settings. 
+To set the opsmanager admin details change the name/passord for the initial OM admim user.  If you plan to use LDAP for authentification, you will need to set this user a user that is also in LDAP - e.g use sAMAccountName with an arbitrary password.  Then after the deployment, one changes the OpsManager Auth type from the app DB to use LDAP in the configuration settings.
 
 ```
 user="sAMAccountName"
@@ -192,6 +191,7 @@ mmsldapuseremail="mail"
 ### Mail Relay Account
 
 To set up for e-mail based alerts, configure e-mail here or or set up later.
+
 ```
 mmsemail="account@foo.com"
 mmsmailhostname="smtp.relay.net"
@@ -211,3 +211,6 @@ Files are located in the k8s directory of the repository.First cd to the k8s dir
 Files are located in the k8s directory of the repository.
 
 * [deploy_Cluster.bash](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker/blob/master/scripts_deploy_Cluster.md)
+* [deploy_OM.bash](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker/blob/master/scripts_deploy_OM.md)
+* [deploy_Operator.bash](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker/blob/master/scripts_deploy_Operator.md)
+* [bin/deploy_org.bash](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker/blob/master/scripts_bin_deploy_org.md)
