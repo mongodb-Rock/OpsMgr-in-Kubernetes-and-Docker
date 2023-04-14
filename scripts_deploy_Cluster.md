@@ -12,7 +12,7 @@ There are a few command-line tools that must be installed such as:
 
 A Kubernetes or Openshift cluster is needed for exectution.  You can check the availability by running:  `kubectl api-resources` should return output without error.
 
-Copy the sample_init.conf to init.conf to set your specific values.  See the [README Configuration Section](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker#configuratio "Configure Ops Manager")
+Copy the sample_init.conf to init.conf to set your specific values.  See the [README Configurationn Section](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker#configuration "Configure Ops Manager")
 
 ### Usage
 

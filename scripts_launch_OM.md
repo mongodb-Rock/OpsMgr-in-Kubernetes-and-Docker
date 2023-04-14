@@ -12,7 +12,7 @@ These can be change based on the system needs, as of right now you will need the
 
 A ready cluster is needed for exectution.   `kubectl api-resources` should have a return.
 
-Cope the sample_init.conf to init.conf and set the appropriate values.  See the [README Configuration Section](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker#configuratio "Configure Ops Manager")
+Cope the sample_init.conf to init.conf and set the appropriate values.  See the [README Configurationn Section](https://github.com/mongodb-Rock/OpsMgr-in-Kubernetes-and-Docker#configuration "Configure Ops Manager")
 
 ### Usage
 
