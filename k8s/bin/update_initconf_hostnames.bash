@@ -61,17 +61,17 @@ if [[ ${opsMgrExtIp} != "" ]]
 then
 printf "\n%s\n\n" "*** Note: sudo may ask for your password" 
 # put the name and IP for opsmanager in /etc/hosts 
-grep "^[0-9].*${name}-svc.${namespace}.svc.cluster.local" /etc/hosts > /dev/null 2>&1
+grep "^[0-9].*${name}-svc.${namespace}.svc.${domainName}" /etc/hosts > /dev/null 2>&1
 if [[ $? == 0 ]]
 then
     # replace host entry
     printf "%s" "Replacing /etc/hosts entry: "
-    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.cluster.local ${name}-svc ${omExternalName}" 
-    sudo ${sed} -E -e "s|^[0-9].*(${name}-svc.*.svc.cluster.local.*)|${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.cluster.local ${name}-svc ${omExternalName}|" /etc/hosts 1>/dev/null
+    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${domainName} ${name}-svc ${omExternalName}" 
+    sudo ${sed} -E -e "s|^[0-9].*(${name}-svc.*.svc.${domainName}.*)|${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${domainName} ${name}-svc ${omExternalName}|" /etc/hosts 1>/dev/null
 else
     # add host entry
     printf "%s" "Adding /etc/hosts entry: "
-    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.cluster.local ${name}-svc ${omExternalName}" | sudo tee -a /etc/hosts
+    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${domainName} ${name}-svc ${omExternalName}" | sudo tee -a /etc/hosts
 fi
 fi
 }
@@ -87,7 +87,7 @@ then
     return
 fi
 
-if [[ $serviceType == "NodePort" ]]
+if [[ $serviceType == "NodePort" || ${tls} == false ]]
 then
 	nodename=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="Hostname")].address}') )
 	dnslist=(  $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
@@ -154,7 +154,7 @@ done
 getSHname() {
 name=${1}
 # sharded mongos
-slist=( $( kubectl get svc|grep "${name}-mongos-.-svc-external" 2>/dev/null |awk '{print $1}') )
+slist=( $( kubectl get svc -o name | grep "${name}-mongos-.-svc-external" 2>/dev/null ) )
 if [[ $? != 0 || ${#slist} == 0 ]]
 then
     printf "%s\n" "* * * Error - svc ${name}-mongos-*-svc-external not found" 
@@ -163,7 +163,7 @@ fi
 n=0
 for s in ${slist[*]}
 do 
-    slist[$n]=$( get_hns.bash -s "${s}" ) 
+    slist[$n]=$( get_hns.bash -s "${s##*/}" ) 
     n=$((n+1))
 done
 
@@ -193,7 +193,7 @@ printf "\n"
 n=0
 while [ $n -lt $num ]
 do
-  sname="${name}-mongos-${n}.${name}-svc.${namespace}.svc.cluster.local"
+  sname="${name}-mongos-${n}.${name}-svc.${namespace}.svc.${domainName}"
   m=$n;  if [[ $m > $num ]]; then m=$num; fi;
   if [[ "${iplist[$m]}" == "" || "${sname}" == "" ]] 
   then

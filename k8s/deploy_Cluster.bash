@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 
 d=$( dirname "$0" )
 cd "${d}"
@@ -69,35 +69,50 @@ fi
 
 tlsc="#TLS "
 tlsr=${tlsc}
-if [[ ${tls} == 1 ]]
+[[ ${x509} == true ]] && x509m=', "X509"'
+if [[ ${tls} == true ]]
 then
     tlsr=""
+else
+    x509m=""
 fi
+
+sslRequireValidMMSServerCertificates=false
 tlsMode=${tlsMode:-"requireTLS"}
+if [[ ${tlsMode} == "requireTLS" ]]
+then
+    sslRequireValidMMSServerCertificates=true
+fi
 
 kmipc="#KMIP "
 kmipr=${kmipc}
-if [[ ${kmip} == 1 ]]
+if [[ ${kmip} == true ]]
 then
     kmipr=""
 fi
 
+ldapt="#LDAPT "
+ldaptls="none"
 if [[ ${ldap} == 'ldaps' ]]
 then
-    LDAPT=""
+    ldapt=""
     ldaptls="tls"
-else
-    LDAPT="#LDAPT "
+    ldapm=', "LDAP"'
+elif [[ ${ldap} == 'ldap' ]]
+then
+    ldapt="#LDAPT "
     ldaptls="none"
+    ldapm=', "LDAP"'
 fi
 
-if [[ ${ldap} == 'ldap' || ${ldap} == 'ldaps' ]]
+if [[ ${tls} == 'true' ]]
 then
   cat ${template} | sed \
     -e "s|$tlsc|$tlsr|" \
     -e "s|TLSMODE|$tlsMode|" \
     -e "s|$kmipc|$kmipr|" \
     -e "s|VERSION|$ver|" \
+    -e "s|DOMAINNAME|$domainName|" \
     -e "s|RSMEM|$mem|" \
     -e "s|RSCPU|$cpu|" \
     -e "s|RSDISK|$dsk|" \
@@ -109,8 +124,10 @@ then
     -e "s|MSMEM|$msmem|" \
     -e "s|NAMESPACE|$namespace|" \
     -e "s|SERVICETYPE|$serviceType|" \
+    -e "s|X509M|$x509m|" \
+    -e "s|LDAPM|$ldapm|" \
     -e "s|#LDAP  ||" \
-    -e "s|#LDAPT |$LDAPT|" \
+    -e "s|#LDAPT |$lpapt|" \
     -e "s|LDAPTLS|$ldaptls|" \
     -e "s|LDAPBINDQUERYUSER|$ldapBindQueryUser|" \
     -e "s|LDAPAUTHZQUERYTEMPLATE|$ldapAuthzQueryTemplate|" \
@@ -126,6 +143,7 @@ else
     -e "s|$tlsc|$tlsr|" \
     -e "s|$kmipc|$kmipr|" \
     -e "s|VERSION|$ver|" \
+    -e "s|DOMAINNAME|$domainName|" \
     -e "s|RSMEM|$mem|" \
     -e "s|RSCPU|$cpu|" \
     -e "s|RSDISK|$dsk|" \
@@ -137,7 +155,19 @@ else
     -e "s|MSMEM|$msmem|" \
     -e "s|NAMESPACE|$namespace|" \
     -e "s|SERVICETYPE|$serviceType|" \
-    -e "s|#X509  ||" \
+    -e "s|X509M|$x509m|" \
+    -e "s|LDAPM|$ldapm|" \
+    -e "s|#LDAP  ||" \
+    -e "s|#LDAPT |$lpapt|" \
+    -e "s|LDAPTLS|$ldaptls|" \
+    -e "s|LDAPBINDQUERYUSER|$ldapBindQueryUser|" \
+    -e "s|LDAPAUTHZQUERYTEMPLATE|$ldapAuthzQueryTemplate|" \
+    -e "s|LDAPUSERTODNMAPPING|$ldapUserToDNMapping|" \
+    -e "s|LDAPTIMEOUTMS|$ldapTimeoutMS|" \
+    -e "s|LDAPUSERCACHEINVALIDATIONINTERVAL|$ldapUserCacheInvalidationInterval|" \
+    -e "s|LDAPSERVER|$ldapServer|" \
+    -e "s|LDAPCERTMAPNAME|$ldapCertMapName|" \
+    -e "s|LDAPKEY|$ldapKey|" \
     -e "s|PROJECT-NAME|$fullName|" > "$mdb"
 fi
 
@@ -155,19 +185,23 @@ fi
 # clean up old stuff
 if [[ ${cleanup} == 1 ]]
 then
-  for type in mdb configmaps csr
+  kubectl delete mdb "${fullName}" --now > /dev/null 2>&1
+  kubectl delete $( kubectl get pods -o name | grep "${fullName}" ) --force --now > /dev/null 2>&1
+  for type in pvc svc secrets configmaps
   do
-    kubectl delete $type "${fullName}" --now > /dev/null 2>&1
+    kubectl delete $( kubectl get $type -o name | grep "${fullName}" ) --now > /dev/null 2>&1
   done
-  kubectl delete pods $( kubectl get pods | grep "${fullName}" | awk '{print $1}' ) --force --now > /dev/null 2>&1
-  for type in pvc svc secrets certificaterequests certificates
+  if [[ ${tls} == true ]]
+  then
+  for type in csr certificaterequests certificates
   do
-    kubectl delete $type $( kubectl get $type | grep "${fullName}" | awk '{print $1}' ) --now > /dev/null 2>&1
+    kubectl delete $( kubectl get $type -o name | grep "${fullName}" ) --now > /dev/null 2>&1
   done
+  fi
 fi
 
 # Create map for OM Org/Project
-if [[ ${tls} == 1 ]]
+if [[ ${tls} == true ]]
 then
   kubectl delete configmap "${fullName}" > /dev/null 2>&1
   if [[ $orgId != "" ]]
@@ -177,14 +211,14 @@ then
         --from-literal="orgId=${orgId}" \
         --from-literal="projectName=${projectName}" \
         --from-literal="sslMMSCAConfigMap=opsmanager-ca" \
-        --from-literal="sslRequireValidMMSServerCertificates='true'"
+        --from-literal="sslRequireValidMMSServerCertificates=${sslRequireValidMMSServerCertificates}"
   else
     kubectl create configmap "${fullName}" \
         --from-literal="baseUrl=${opsMgrUrl}" \
         --from-literal="orgId=" \
         --from-literal="projectName=${projectName}" \
         --from-literal="sslMMSCAConfigMap=opsmanager-ca" \
-        --from-literal="sslRequireValidMMSServerCertificates='true'"
+        --from-literal="sslRequireValidMMSServerCertificates=${sslRequireValidMMSServerCertificates}"
   fi
 
   if [[ ${sharded} == true ]]
@@ -281,8 +315,11 @@ fi
 kubectl apply -f "${mdb}"
 
 # remove any certificate requests
-kubectl delete csr $( kubectl get csr -o name | grep "${fullName}" ) > /dev/null 2>&1
-kubectl delete certificaterequest $( kubectl get certificaterequest -o name | grep "${fullName}" ) > /dev/null 2>&1
+if [[ ${tls} == true ]]
+then
+  kubectl delete csr $( kubectl get csr -o name | grep "${fullName}" ) > /dev/null 2>&1
+  kubectl delete certificaterequest $( kubectl get certificaterequest -o name | grep "${fullName}" ) > /dev/null 2>&1
+fi
 
 # Monitor the progress
 resource="mongodb/${fullName}"
