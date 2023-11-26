@@ -58,6 +58,7 @@ cleanup=${x:-0}
 projectName="${projectName:-$name}"
 fullName=$( printf "${projectName}-${name}"| tr '[:upper:]' '[:lower:]' )
 skipMakeCerts=${skipMakeCerts:-0}
+[[ ${demo} ]] && serviceType="NodePort"
 
 # make manifest from template
 mdb="mdb_${fullName}.yaml"
@@ -105,7 +106,7 @@ then
     ldapm=', "LDAP"'
 fi
 
-if [[ ${tls} == 'true' ]]
+if [[ ${tls} == true ]]
 then
   cat ${template} | sed \
     -e "s|$tlsc|$tlsr|" \
