@@ -3,7 +3,7 @@
 # script to find out if there is an existing non-deleted Organization and what is the id
 
 source init.conf
-test -f custom.conf && source custom.conf
+test -f ${deployconf} && source ${deployconf}
 
 while getopts 'i:o:h' opt
 do
@@ -16,12 +16,12 @@ do
   esac
 done
 
-orgName=${orgName:-myOrg}
+orgName=${orgName:-myDeployment}
 
 oid=$( curl $curlOpts --silent --user "${publicKey}:${privateKey}" --digest \
  --header 'Accept: application/json' \
  --header 'Content-Type: application/json' \
- --request GET "${opsMgrExtUrl2}/api/public/v1.0/orgs/?pretty=true" )
+ --request GET "${opsMgrExtUrl1}/api/public/v1.0/orgs/?pretty=true" )
 
 errorCode=$( printf "%s" "$oid" | jq .errorCode )
 

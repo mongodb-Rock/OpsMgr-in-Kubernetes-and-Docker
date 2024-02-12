@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-# creates custom.conf with the out from below
+# creates ${deployconf} with the out from below
 source init.conf
 
 while getopts 'i:o:u:h' opt
@@ -16,7 +16,7 @@ do
 done
 shift "$(($OPTIND -1))"
 
-orgName="${orgName:-myOrg}"
+orgName="${orgName:-myDeployment}"
 
 #create_key.bash
 get_key.bash
@@ -28,13 +28,13 @@ fi
 create_org.bash -o "${orgName}"
 if [[ $? != 0 ]]
 then
-    rm custom.conf
+    #rm ${deployconf}
     exit 1
 fi
-source custom.conf
+source ${deployconf}
 # user can be supplied or is in init.conf
-# add user to the org (orgId is in custom.conf)
+# add user to the org (orgId is in ${deployconf})
 orgId="${orgName}_orgId"
 orgId="${!orgId}"
 add_user_to_org.bash -u "${user}" -i "${orgId}"
-#cat custom.conf
+#cat ${deployconf}

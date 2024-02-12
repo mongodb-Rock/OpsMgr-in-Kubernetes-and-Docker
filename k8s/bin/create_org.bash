@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source init.conf
-test -f custom.conf && source custom.conf
+test -f ${deployconf} && source ${deployconf}
 
 while getopts 'o:h' opt
 do
@@ -16,7 +16,7 @@ done
 shift "$(($OPTIND -1))"
 
 # check to see if the org (still) exists
-orgName="${orgName:-myOrg}"
+orgName="${orgName:-myDeployment}"
 # test to see if the org already exits if so get the orgId
 name=( $( get_org.bash -o ${orgName} ) )
 
@@ -32,7 +32,7 @@ curlData=$( printf '{ "name" : "NAME" }' | sed -e"s/NAME/${orgName}/" )
 oid=$( curl $curlOpts --silent --user "${publicKey}:${privateKey}" --digest \
  --header 'Accept: application/json' \
  --header 'Content-Type: application/json' \
- --request POST "${opsMgrExtUrl2}/api/public/v1.0/orgs?pretty=true" \
+ --request POST "${opsMgrExtUrl1}/api/public/v1.0/orgs?pretty=true" \
  --data "${curlData}" ) 
 
 errorCode=$( printf "%s" "$oid" | jq .errorCode )
@@ -42,15 +42,15 @@ fi
 
 if [[ "${errorCode}" == "null" ]]
 then
-    conf=$( sed -e "/${orgName}_orgId=/d" custom.conf )
-    printf "%s\n" "${conf}" > custom.conf
+    conf=$( sed -e "/${orgName//-/_}_orgId=/d" ${deployconf} )
+    printf "%s\n" "${conf}" > ${deployconf}
     if [[ ${orgExists} == 1 ]]
     then
     printf "\n%s\n" "Using the existing Organization: ${orgName} with orgID: ${orgId}" 
     else
     printf "\n%s\n" "Created a new Organization: ${orgName} with orgId: ${orgId}"
     fi
-    printf  "${orgName}_orgId=\"${orgId}\"\n"     >> custom.conf
+    printf  "${orgName//-/_}_orgId=\"${orgId}\"\n"     >> ${deployconf}
 else
     printf "%s\n" "* * * Error - Organiztion creation failed"
     exit 1

@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 source init.conf
-source custom.conf
+source ${deployconf}
 
 while getopts 'u:h' opt
 do
@@ -20,13 +20,13 @@ file=/tmp/$$user.json
 output=$( curl $curlOpts --silent --user "${publicKey}:${privateKey}" --digest \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
-  --request GET "${opsMgrExtUrl2}/api/public/v1.0/users/byName/${user}?pretty=true" )
+  --request GET "${opsMgrExtUrl1}/api/public/v1.0/users/byName/${user}?pretty=true" )
 
 errorCode=$?
 
-conf=$( sed -e '/userId/d' custom.conf ) 
-printf "%s\n" "${conf}" > custom.conf
-printf  "userId=$( printf "${output}" | jq .id )" >> custom.conf
+conf=$( sed -e '/userId/d' ${deployconf} ) 
+printf "%s\n" "${conf}" > ${deployconf}
+printf  "userId=$( printf "${output}" | jq .id )" >> ${deployconf}
 
 exit $errorCode
 

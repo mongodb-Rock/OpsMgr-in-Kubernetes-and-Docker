@@ -6,22 +6,22 @@ TAB=$'\t'
 getOMname() {
 name=$1
 # get the OpsMgr URL and internal IP
-opsMgrUrl=$(        kubectl get om/${name}          -o jsonpath={.status.opsManager.url} )
-eval port=$(        kubectl get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].port} )
-eval targetPort=$(  kubectl get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].targetPort} )
-eval nodePort=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].nodePort} )
-eval serviceType=$( kubectl get svc/${name}-svc-ext -o jsonpath={.spec.type} )
+opsMgrUrl=$(        kubectl -n ${namespace} get om/${name}          -o jsonpath={.status.opsManager.url} )
+eval port=$(        kubectl -n ${namespace} get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].port} )
+eval targetPort=$(  kubectl -n ${namespace} get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].targetPort} )
+eval nodePort=$(    kubectl -n ${namespace} get svc/${name}-svc-ext -o jsonpath={.spec.ports[0].nodePort} )
+eval serviceType=$( kubectl -n ${namespace} get svc/${name}-svc-ext -o jsonpath={.spec.type} )
 
 if [[ $serviceType == "NodePort" ]]
 then
     slist=( $(get_hns.bash -n "${name}" ) ) 
     hostname="${slist[0]%:*}"
-    slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
-    [[ ${slist[0]} == "" ]] && slist=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' ) )
+    slist=( $(kubectl -n ${namespace} get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
+    [[ ${slist[0]} == "" ]] && slist=( $(kubectl -n ${namespace} get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' ) )
     opsMgrExtIp=${slist[0]}
 else
-    eval hostname=$(    kubectl get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].hostname} ) 
-    eval opsMgrExtIp=$( kubectl get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].ip} ) 
+    eval hostname=$(    kubectl -n ${namespace} get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].hostname} ) 
+    eval opsMgrExtIp=$( kubectl -n ${namespace} get svc/${name}-svc-ext -o jsonpath={.status.loadBalancer.ingress[0].ip} ) 
 fi
 
 http="http"
@@ -34,19 +34,20 @@ then
     port=${nodePort}
 fi
 
-if [[ ${hostname} == "null" ]]
+if [[ ${hostname} == "null" || ${hostname} == "" ]]
 then
-    opsMgrExtUrl1=${http}://${opsMgrExtIp}:${port}
-else
-    opsMgrExtUrl1=${http}://${hostname}:${port}
-    opsMgrExtUrl2=${http}://${omExternalName}:${port}
-    if [[ $opsMgrExtIp == "" ]]
-    then
-        eval list=( $(nslookup ${hostname} | grep Address ) )
-        opsMgrExtIp=${list[3]}
-    fi
-    [[ "${hostname}" == "localhost" ]] && opsMgrExtIp=127.0.0.1
+    eval list=( $(nslookup ${opsMgrExtIp} | grep "name =" ) )
+    hostname=${list[3]}
 fi
+opsMgrExtUrl1=${http}://${omExternalName}:${port}
+opsMgrExtUrl2=${http}://${hostname}:${port}
+
+if [[ $opsMgrExtIp == "" ]]
+then
+    eval list=( $(nslookup ${hostname} | grep Address ) )
+    opsMgrExtIp=${list[3]}
+fi
+[[ "${hostname}" == "localhost" ]] && opsMgrExtIp=127.0.0.1
 
 # Update init.conf with OpsMgr info
 initconf=$( sed -e '/opsMgrUrl/d' -e '/opsMgrExt/d' -e '/queryableBackupIp/d' init.conf )
@@ -61,17 +62,17 @@ if [[ ${opsMgrExtIp} != "" ]]
 then
 printf "\n%s\n\n" "*** Note: sudo may ask for your password" 
 # put the name and IP for opsmanager in /etc/hosts 
-grep "^[0-9].*${name}-svc.${namespace}.svc.${domainName}" /etc/hosts > /dev/null 2>&1
+grep "^[0-9].*${name}-svc.${namespace}.svc.${clusterDomain}" /etc/hosts > /dev/null 2>&1
 if [[ $? == 0 ]]
 then
     # replace host entry
     printf "%s" "Replacing /etc/hosts entry: "
-    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${domainName} ${name}-svc ${omExternalName}" 
-    sudo ${sed} -E -e "s|^[0-9].*(${name}-svc.*.svc.${domainName}.*)|${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${domainName} ${name}-svc ${omExternalName}|" /etc/hosts 1>/dev/null
+    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${clusterDomain} ${name}-svc ${omExternalName}" 
+    sudo ${sed} -E -e "s|^[0-9].*(${name}-svc.*.svc.${clusterDomain}.*)|${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${clusterDomain} ${name}-svc ${omExternalName}|" /etc/hosts 1>/dev/null
 else
     # add host entry
     printf "%s" "Adding /etc/hosts entry: "
-    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${domainName} ${name}-svc ${omExternalName}" | sudo tee -a /etc/hosts
+    printf "%s\n" "${opsMgrExtIp}${TAB}${name}-svc.${namespace}.svc.${clusterDomain} ${name}-svc ${omExternalName}" | sudo tee -a /etc/hosts
 fi
 fi
 }
@@ -80,7 +81,7 @@ getRSname() {
 name=$1
 # get the node info for creating an external cluster via agent automation
 
-svc=( $( kubectl get svc|grep "${name}-." 2>/dev/null ) )
+svc=( $( kubectl -n ${namespace} get svc|grep "${name}-." 2>/dev/null ) )
 if [[ $? != 0 ]] 
 then
     printf "%s\n" "* * * Error - svc ${name}-0 not found" 
@@ -89,9 +90,9 @@ fi
 
 if [[ $serviceType == "NodePort" || ${tls} == false ]]
 then
-	nodename=( $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="Hostname")].address}') )
-	dnslist=(  $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
-	iplist=(   $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
+	nodename=( $(kubectl -n ${namespace} get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="Hostname")].address}') )
+	dnslist=(  $(kubectl -n ${namespace} get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalDNS")].address}' ) )
+	iplist=(   $(kubectl -n ${namespace} get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ) )
 else
 	list=( $( get_hns.bash -n "${name}" ) )
         [[ $? != 0 ]] && return
@@ -118,14 +119,22 @@ if [[ ${nodename} == "minikube" || ${nodename} == "colima" ]]
 then
     nodename=($nodename)
     dnslist=($nodename)
-    iplist=(   $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' ) )
+    iplist=(   $(kubectl -n ${namespace} get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' ) )
 fi
 
 # add 3 nodes to the /etc/hosts file
+eval externalDomain=$( kubectl -n ${namespace} get mdb ${name} -o json | jq .spec.externalAccess.externalDomain ); 
 names=( ${name}-0 ${name}-1 ${name}-2 )  
-fullNames=( ${name}-0.${name}-svc.${namespace}.svc.${domainName} \
-            ${name}-1.${name}-svc.${namespace}.svc.${domainName} \
-            ${name}-2.${name}-svc.${namespace}.svc.${domainName} )
+if [[ ${externalDomain} != "null" ]]
+then
+    fullNames=( "${name}-0.${externalDomain}" \
+                "${name}-1.${externalDomain}" \
+                "${name}-2.${externalDomain}" )
+else
+    fullNames=( "${name}-0.${name}-svc.${namespace}.svc.${clusterDomain}" \
+                "${name}-1.${name}-svc.${namespace}.svc.${clusterDomain}" \
+                "${name}-2.${name}-svc.${namespace}.svc.${clusterDomain}" )
+fi
 
 num=${#iplist[@]}
 if [[ ${num} > 0 ]]
@@ -157,7 +166,7 @@ done
 getSHname() {
 name=${1}
 # sharded mongos
-slist=( $( kubectl get svc -o name | grep "${name}-mongos-.-svc-external" 2>/dev/null ) )
+slist=( $( kubectl -n ${namespace} get svc -o name | grep "${name}-mongos-.-svc-external" 2>/dev/null ) )
 if [[ $? != 0 || ${#slist} == 0 ]]
 then
     printf "%s\n" "* * * Error - svc ${name}-mongos-*-svc-external not found" 
@@ -179,7 +188,7 @@ do
     ip=( $( nslookup $h | grep Address ) )
     if [[ ${ip[3]} == "" ]]
     then
-    ip=( Address $(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ))
+    ip=( Address $(kubectl -n ${namespace} get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}' ))
     fi
     iplist[$n]=${ip[3]}  # strip off Address:
     nodename[$n]=""
@@ -196,7 +205,7 @@ printf "\n"
 n=0
 while [ $n -lt $num ]
 do
-  sname="${name}-mongos-${n}.${name}-svc.${namespace}.svc.${domainName}"
+  sname="${name}-mongos-${n}.${name}-svc.${namespace}.svc.${clusterDomain}"
   m=$n;  if [[ $m > $num ]]; then m=$num; fi;
   if [[ "${iplist[$m]}" == "" || "${sname}" == "" ]] 
   then

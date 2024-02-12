@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# script to find out if there is an existing non-deleted Organization and what is the id
-
 source init.conf
-test -f custom.conf && source custom.conf
+test -f ${deployconf} && source ${deployconf}
 
 while getopts 'p:rh' opt
 do
@@ -41,7 +39,7 @@ then
   output=$( curl $curlOpts --silent --user "${publicKey}:${privateKey}" --digest \
   --header 'Accept: application/json' \
   --header 'Content-Type: application/json' \
-  --request PUT "${opsMgrExtUrl2}/api/public/v1.0/groups/${projectId}/controlledFeature?pretty=true" \
+  --request PUT "${opsMgrExtUrl1}/api/public/v1.0/groups/${projectId}/controlledFeature?pretty=true" \
   --data "${curlData}" )
 fi
 

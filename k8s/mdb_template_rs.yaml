@@ -1,22 +1,63 @@
 ---
 apiVersion: mongodb.com/v1
-kind: MongoDB
+kind: MDBKIND
 metadata:
   name: PROJECT-NAME
   namespace: NAMESPACE
 spec:
   members: 3
-  version: VERSION
+  version: "VERSION"
+  featureCompatibilityVersion: "FCV"
   clusterDomain: DOMAINNAME
   type: ReplicaSet
   opsManager:
     configMapRef:
       name: PROJECT-NAME # Must match metadata.name in ConfigMap file
-  credentials: NAMESPACE-opsmanager-admin-key
+  credentials: NAMESPACE-OPSMANAGER-admin-key
   persistent: true
+  duplicateServiceObjects: DUPSERVICE
+  #MULTI clusterSpecList:
+  #MULTI   - clusterName: MDB_CLUSTER_0_CONTEXT
+  #MULTI     members: 2
+  #MULTI     #MCEXPOSE externalAccess:
+  #MULTI     #MCEXPOSE   #EXTDOMAIN externalDomain: CLUSTER0.EXTDOMAINNAME
+  #MULTI     #MCEXPOSE   externalService:
+  #MULTI     #MCEXPOSE   #  annotations:
+  #MULTI     #MCEXPOSE   #    "cloud.google.com/l4-rbs": "enabled"
+  #MULTI   - clusterName: MDB_CLUSTER_1_CONTEXT
+  #MULTI     members: 2
+  #MULTI     #MCEXPOSE externalAccess:
+  #MULTI     #MCEXPOSE   #EXTDOMAIN externalDomain: CLUSTER1.EXTDOMAINNAME
+  #MULTI     #MCEXPOSE   externalService:
+  #MULTI     #MCEXPOSE   #  annotations:
+  #MULTI     #MCEXPOSE   #    "cloud.google.com/l4-rbs": "enabled"
+  #MULTI   - clusterName: MDB_CLUSTER_2_CONTEXT
+  #MULTI     members: 1
+  #MULTI     #MCEXPOSE externalAccess:
+  #MULTI     #MCEXPOSE   #EXTDOMAIN externalDomain: CLUSTER2.EXTDOMAINNAME
+  #MULTI     #MCEXPOSE   externalService:
+  #MULTI     #MCEXPOSE   #  annotations:
+  #MULTI     #MCEXPOSE   #    "cloud.google.com/l4-rbs": "enabled"
+  #MULTI statefulSet:
+  #MULTI   spec:
+  #MULTI     template:
+  #MULTI       spec:
+  #MULTI         containers:
+  #MULTI         - name: mongodb-enterprise-database
+  #MULTI           resources:
+  #MULTI             limits:
+  #MULTI               cpu: "RSCPU"
+  #MULTI               memory: RSMEM 
+  #MULTI     volumeClaimTemplates:
+  #MULTI     - metadata:
+  #MULTI         name: data
+  #MULTI       spec:
+  #MULTI         resources:
+  #MULTI           requests:
+  #MULTI             storage: RSDISK # 2Gi
   podSpec:
     # `podTemplate` allows to set custom fields in PodTemplateSpec for the
-    # Database Pods.
+    # Used for non-MultiCluster Mongodb Pods.
     # For more information see:
     # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podtemplatespec-v1-core
     podTemplate:
@@ -29,17 +70,37 @@ spec:
             limits:
               cpu: "RSCPU"
               memory: RSMEM 
+        #KMIP   volumeMounts:
+        #KMIP     - name: kmip-client-pem
+        #KMIP       mountPath: /kmip/cert
+        #KMIP     - name: kmip-ca-pem
+        #KMIP       mountPath: /kmip/ca
+        #KMIP volumes:
+        #KMIP  - name: kmip-client-pem
+        #KMIP    secret:
+        #KMIP      secretName: PROJECT-NAME-kmip-client-pem
+        #KMIP  - name: kmip-ca-pem
+        #KMIP    configMap:
+        #KMIP      name: PROJECT-NAME-kmip-ca-pem
+        #KMIP      items:
+        #KMIP        - key: ca.pem
+        #KMIP          path: ca.pem
     persistence:
       single:
         storage: RSDISK # 2Gi
+
+  #EXPOSE externalAccess:
+  #EXPOSE   #EXTDOMAIN externalDomain: EXTDOMAINNAME
+  #EXPOSE   externalService:
+  #EXPOSE     annotations:
+  #EXPOSE     # cloud-specific annotations for the service
+  #EXPOSE     spec:
+  #EXPOSE       type: SERVICETYPE
+  #EXPOSE       # port: 27017
   security:
     #TLS certsSecretPrefix: mdb # provide custom x509 certificates (keys and certs)
     #TLS tls:
     #TLS   ca: ca-pem # provide a custom certificate authority (cert in a pem file)
-    #  enabled: true # false # deprecated in 1.16
-    #  secretRef:
-    #    prefix: mdb # same as certsSecretPrefix (not needed)
-    #    name: mdb-myreplicaset-cert
     authentication:
       enabled : true # false
       agents: 
@@ -80,6 +141,14 @@ spec:
     #LDAP          role: dbAdminAnyDatabase
     #LDAP        - db: admin
     #LDAP          role: readWriteAnyDatabase
+    #LDAP    - role: cn=dbadmins,ou=users,dc=example,dc=org
+    #LDAP      db: admin
+    #LDAP      privileges: []
+    #LDAP      roles:
+    #LDAP        - db: admin
+    #LDAP          role: root
+    #LDAP        - db: admin
+    #LDAP          role: clusterAdmin
   additionalMongodConfig:
     operationProfiling:
       mode: "off" # "slowOp"
@@ -87,6 +156,7 @@ spec:
   #TLS   net:
   #TLS     tls:
   #TLS       mode: "TLSMODE" # "requireTLS" "preferTLS" "allowTLS" 
+  #TLS       allowConnectionsWithoutCertificates: "ALLOWCON"
   # The default TLS mode is 'requireTLS' but it can be customized using the
   # the `additionalMongodConfig` structure. Please find more information here:
   # https://docs.mongodb.com/manual/reference/configuration-options/#net.tls.mode
@@ -95,6 +165,6 @@ spec:
   #KMIP     enableEncryption: true
   #KMIP     kmip:
   #KMIP       clientCertificateFile: /kmip/cert/cert.pem
-  #KMIP       serverCAFile: /mongodb-automation/tls/ca/ca-pem
-  #KMIP       serverName: kmip.server.tld
+  #KMIP       serverCAFile:          /kmip/ca/ca.pem
+  #KMIP       serverName: kmip.server.mdb.com
   #KMIP       port: 5696
